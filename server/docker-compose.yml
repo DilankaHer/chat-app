@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  db: 
+    image: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    ports: 
+      - 5432:5432
+    volumes:
+      - ./database/postgres-data:/var/lib/postgresql
+    restart: unless-stopped
+
+  # service: 
+  #   image: golang
+  #   container_name: golang
+  #   ports:
+  #     - 8080:8080
+  #   restart: unless-stopped
