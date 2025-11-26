@@ -1,58 +1,26 @@
-import React, { useEffect, useRef, useState } from "react";
-
+import { useState } from "react";
+import Room from "./Room";
 function App() {
-  const [text, setText] = useState("");
-  const wsRef = useRef<WebSocket | null>(null);
-
-  useEffect(() => {
-    // Initialize WebSocket only once
-    const ws = new WebSocket("ws://localhost:8080/test-message"); // use ws://
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      console.log("WebSocket connection is open!");
-      ws.send("Hello Server!"); // optional initial message
-    };
-
-    ws.onmessage = (event) => {
-      console.log("Received from server:", event.data);
-    };
-
-    ws.onclose = () => {
-      console.log("WebSocket connection closed.");
-    };
-
-    ws.onerror = (err) => {
-      console.error("WebSocket error:", err);
-    };
-
-    // Clean up on unmount
-    return () => {
-      ws.close();
-    };
-  }, []);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(text);
-      setText("");
-    } else {
-      alert("WebSocket is not connected yet!");
-    }
-  };
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const clientId = crypto.randomUUID();
 
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Type something..."
-        />
-        <button type="submit">Submit</button>
-      </form>
+    <div className="bg-blue-400 dark:bg-blue-950 p-40 min-h-screen text-black dark:text-white">
+      <div className="flex justify-center">
+        <span className=" text-7xl font-mono">Chat App - Room Based WebSocket Demo</span>
+      </div>
+      <div>
+        {!roomId ? (
+          <div className="flex flex-row justify-center items-center p-4 gap-10 mt-90">
+            <button className="text-6xl items-center gap-2 rounded-2xl px-20 py-10 font-medium shadow-sm transition bg-linear-to-b from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={() => setRoomId("1")}>Room 1</button>
+            <button className="text-6xl items-center gap-2 rounded-2xl px-20 py-10 font-medium shadow-sm transition bg-linear-to-b from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed" 
+            onClick={() => setRoomId("2")}>Room 2</button>
+          </div>
+        ) : (
+          <Room id={roomId} clientId={clientId} />
+        )}
+      </div>
     </div>
   );
 }

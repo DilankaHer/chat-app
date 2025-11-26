@@ -19,11 +19,9 @@ func main() {
 	// 	panic(err)
 	// }
 
-	// app.Logger.Println("app has started")
-
 	r := routes.SetupRoutes()
 	// r.Handle("/images/*", http.StripPrefix("/images/", http.FileServer(http.Dir("images"))))
-    // r.Handle("/css/*", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
+	// r.Handle("/css/*", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
 
 	db, err := db.ConnectDB()
 	if err != nil {
