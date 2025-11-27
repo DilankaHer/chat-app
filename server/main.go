@@ -1,8 +1,9 @@
 package main
 
 import (
+	"duhchat/internal/api/handler"
 	"duhchat/internal/db"
-	migration "duhchat/internal/db/migrations"
+	"duhchat/internal/repo"
 	"duhchat/internal/routes"
 	"fmt"
 	"net/http"
@@ -19,19 +20,16 @@ func main() {
 	// 	panic(err)
 	// }
 
-	r := routes.SetupRoutes()
-	// r.Handle("/images/*", http.StripPrefix("/images/", http.FileServer(http.Dir("images"))))
-	// r.Handle("/css/*", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
-
 	db, err := db.ConnectDB()
 	if err != nil {
-		fmt.Println(err.Error())
+		panic(err)
 	}
+	userRepo := repo.NewUserRepo(db)	
+	loginHandler := handler.NewLoginHandler(userRepo)	
 
-	err = migration.RunMigrations(db)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	r := routes.SetupRoutes(loginHandler)
+	// r.Handle("/images/*", http.StripPrefix("/images/", http.FileServer(http.Dir("images"))))
+	// r.Handle("/css/*", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
 
 	server := &http.Server{
 		Addr:         ":8080",
@@ -43,5 +41,6 @@ func main() {
 
 	if err := server.ListenAndServe(); err != nil {
 		fmt.Println("Fatal Error")
+		panic(err)
 	}
 }

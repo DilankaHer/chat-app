@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- +goose StatementEnd
 
 -- +goose StatementBegin
-INSERT INTO users(username, email, password_hash) VALUES('dilanka', 'dilankaherath@gmail.com', 'dilanka123');
+-- INSERT INTO users(username, email, password_hash) VALUES('dilanka', 'dilankaherath@gmail.com', 'dilanka123');
 -- +goose StatementEnd
 
 -- +goose Down
