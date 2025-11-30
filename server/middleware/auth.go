@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -30,11 +31,18 @@ func JWTAuth(h http.Handler) http.Handler {
 			}
 			return jwtKey, nil
 		})
-		if err != nil {
-			fmt.Println(err)
-			return 
+		if err != nil || !token.Valid {
+			http.Error(w, "invalid token", http.StatusUnauthorized)
+			return // STOP the chain
 		}
 
-		fmt.Println(token.Claims)
+		fmt.Println("User ID", claims["userId"])
+
+		// Optional: attach user info to context
+		ctx := context.WithValue(r.Context(), "user", claims)
+		r = r.WithContext(ctx)
+
+		// Token OK → call next handler
+		h.ServeHTTP(w, r)
 	})
 }

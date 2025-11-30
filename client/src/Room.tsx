@@ -1,34 +1,47 @@
 import React, { useEffect, useRef, useState } from "react";
 
-function Room({ id, clientId }: { id: string, clientId: string }) {
+function Room({ roomId, roomName, userId, setRoomId }: { roomId: string, roomName: string, userId: string, setRoomId: (roomId: string) => void }) {
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
 
   interface Message {
-    id: string,
-    content: string
-    // idx: number
+    roomId: string,
+    content: string,
+    userId: string,
+    isError: boolean,
   }
 
   useEffect(() => {
-    console.log("ClientID", clientId)
-    const ws = new WebSocket(`ws://localhost:8080/joinRoom?roomId=${id}&clientId=${clientId}`);
+    console.log("UserID", userId)
+    const ws = new WebSocket(`ws://localhost:8080/joinRoom?roomId=${roomId}&userId=${userId}`);
     wsRef.current = ws;
 
-    ws.onopen = () => console.log("WebSocket open for room", id);
+    ws.onopen = () => {
+      console.log("WebSocket open for room", roomId);
+      try {
+        fetch(`http://localhost:8080/messages?roomId=${roomId}`)
+          .then(response => response.json())
+          .then(data => {
+            console.log("Fetched messages:", data)
+            setMessages(data)
+          })
+      } catch (error) {
+        console.error("Error fetching messages:", error)
+      }
+    }
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data)
       setMessages(prevMessages => [
         ...prevMessages,
-        { id: msg.id, content: msg.content }
+        { roomId: msg.roomId, content: msg.content, userId: msg.userId, isError: msg.isError }
       ])
     }
     ws.onclose = () => console.log("WS closed");
     ws.onerror = (err) => console.error("WS error", err);
 
     return () => ws.close();
-  }, [id]); // important: re-connect when room changes
+  }, [roomId]); // important: re-connect when room changes
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,10 +51,19 @@ function Room({ id, clientId }: { id: string, clientId: string }) {
     }
   };
 
+  const handleExitRoom = () => {
+    wsRef.current?.close();
+    setRoomId("");
+  };
+
   return (
     <div className="bg-blue-400 dark:bg-blue-950">
       <div className="flex flex-col gap-4 mt-20 justify-center items-center">
-        <h1 className="text-5xl">Connected to Room {id}</h1>
+        <div className="flex flex-row gap-3 items-center">
+        <button className="text-xl items-center gap-2 rounded-2xl px-4 py-2 font-medium shadow-sm transition bg-linear-to-b from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          type="button" onClick={handleExitRoom}>Exit Room</button>
+        <h1 className="text-5xl">Connected to Room {roomName}</h1>
+        </div>
         <form className="flex flex-row gap-3 mt-4 px-4 py-2" onSubmit={handleSubmit}>
           <input
             value={text}
@@ -61,7 +83,7 @@ function Room({ id, clientId }: { id: string, clientId: string }) {
               transition
             "
           />
-          <button className="text-xl items-center gap-2 rounded-2xl px-4 py-2 font-medium shadow-sm transition bg-linear-to-b from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"  
+          <button className="text-xl items-center gap-2 rounded-2xl px-4 py-2 font-medium shadow-sm transition bg-linear-to-b from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
           type="submit">Send</button>
         </form>
         <hr className="my-8 h-px bg-neutral-100 dark:bg-neutral-700 border-0 w-full" />
@@ -72,12 +94,12 @@ function Room({ id, clientId }: { id: string, clientId: string }) {
             <li
               key={idx}
               className={`
-                text-2xl 
+                text-2xl
                 px-4 py-2
-                rounded-xl 
+                rounded-xl
                 w-fit
                 max-w-xs
-                ${msg.id === clientId ? "text-pink-500 text-right bg-pink-100 ml-auto" : "text-white text-left bg-gray-700 mr-auto"}
+                ${msg.userId === userId ? "text-pink-500 text-right bg-pink-100 ml-auto" : "text-white text-left bg-gray-700 mr-auto"}
               `}
             >
               {msg.content}

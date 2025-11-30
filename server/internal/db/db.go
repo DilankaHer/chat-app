@@ -19,31 +19,17 @@ func ConnectDB() (*sql.DB, error) {
 
 	fmt.Println("Open")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	chn := make(chan error, 1)
-	
-	go func(ctx context.Context) {
-		select {
-		case chn <- db.Ping():
-			return 
-		case <- ctx.Done():
-			chn <- ctx.Err() 
-			return 
-		}
-	}(ctx)
-
-	result := <-chn
-	if result != nil {
-		return nil, result
-	}
-
-	err = migration.RunMigrations(db)
-	if err != nil {
+	if err := db.PingContext(ctx); err != nil {
 		return nil, err
 	}
-    fmt.Println("Connected!")
+
+	if err := migration.RunMigrations(db); err != nil {
+		return nil, err
+	}
+	fmt.Println("Connected!")
 
 	return db, nil
 }
