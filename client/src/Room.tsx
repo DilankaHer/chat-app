@@ -9,12 +9,13 @@ function Room({ roomId, roomName, userId, setRoomId }: { roomId: string, roomNam
     roomId: string,
     content: string,
     userId: string,
+    username: string,
     isError: boolean,
   }
 
   useEffect(() => {
     console.log("UserID", userId)
-    const ws = new WebSocket(`ws://localhost:8080/joinRoom?roomId=${roomId}&userId=${userId}`);
+    const ws = new WebSocket(`ws://localhost:8080/joinRoom?roomId=${roomId}`);
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -24,7 +25,9 @@ function Room({ roomId, roomName, userId, setRoomId }: { roomId: string, roomNam
           .then(response => response.json())
           .then(data => {
             console.log("Fetched messages:", data)
-            setMessages(data)
+            if (data != null) {
+              setMessages(data)
+            }
           })
       } catch (error) {
         console.error("Error fetching messages:", error)
@@ -34,7 +37,7 @@ function Room({ roomId, roomName, userId, setRoomId }: { roomId: string, roomNam
       const msg = JSON.parse(event.data)
       setMessages(prevMessages => [
         ...prevMessages,
-        { roomId: msg.roomId, content: msg.content, userId: msg.userId, isError: msg.isError }
+        { roomId: msg.roomId, content: msg.content, userId: msg.userId, username: msg.username, isError: msg.isError }
       ])
     }
     ws.onclose = () => console.log("WS closed");
@@ -99,9 +102,11 @@ function Room({ roomId, roomName, userId, setRoomId }: { roomId: string, roomNam
                 rounded-xl
                 w-fit
                 max-w-xs
+                flex flex-col
                 ${msg.userId === userId ? "text-pink-500 text-right bg-pink-100 ml-auto" : "text-white text-left bg-gray-700 mr-auto"}
               `}
             >
+              <span className={`${msg.userId !== userId ? "text-green-500 text-left": "hidden"}`} >{msg.username}</span>
               {msg.content}
             </li>
           ))}

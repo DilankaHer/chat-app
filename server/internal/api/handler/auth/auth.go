@@ -80,7 +80,6 @@ func (uh *LoginHandler) Signup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (uh *LoginHandler) GetMe(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(r.Context().Value("user"))
 	userId := r.Context().Value("user").(jwt.MapClaims)["userId"].(string)
 	user, err := uh.userRepo.GetUser(userId)
 	if err != nil {
@@ -92,7 +91,6 @@ func (uh *LoginHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 }
 
 func (uh *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Login")
 	defer r.Body.Close()
 	body, err := io.ReadAll(r.Body)
 	if err != nil {

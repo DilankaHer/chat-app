@@ -12,11 +12,12 @@ type MessageRepo struct {
 }
 
 type Message struct {
-	Id      string `json:"id"`
-	RoomId  string `json:"roomId" validate:"required"`
-	UserId  string `json:"userId" validate:"required"`
-	Content string `json:"content" validate:"required"`
-	IsError bool   `json:"isError"`
+	Id       string `json:"id"`
+	RoomId   string `json:"roomId" validate:"required"`
+	UserId   string `json:"userId" validate:"required"`
+	Username string `json:"username" validate:"required"`
+	Content  string `json:"content" validate:"required"`
+	IsError  bool   `json:"isError"`
 }
 
 func NewMessageRepo(db *sql.DB) MessageRepository {
@@ -43,7 +44,8 @@ func (mr *MessageRepo) SendMessage(message *Message) error {
 }
 
 func (mr *MessageRepo) GetMessagesByRoomId(roomId string) ([]Message, error) {
-	query := `SELECT id, room_id, user_id, content FROM messages WHERE room_id = $1`
+	query := `SELECT m.id, m.room_id, m.user_id, m.content, u.username FROM messages AS m
+	          INNER JOIN users AS u ON u.id = m.user_id WHERE m.room_id = $1`
 
 	rows, err := mr.db.Query(query, roomId)
 	if err != nil {
@@ -53,7 +55,7 @@ func (mr *MessageRepo) GetMessagesByRoomId(roomId string) ([]Message, error) {
 	var messages []Message
 	for rows.Next() {
 		var message Message
-		err := rows.Scan(&message.Id, &message.RoomId, &message.UserId, &message.Content)
+		err := rows.Scan(&message.Id, &message.RoomId, &message.UserId, &message.Content, &message.Username)
 		if err != nil {
 			return nil, err
 		}

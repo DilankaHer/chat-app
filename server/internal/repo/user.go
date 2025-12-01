@@ -41,10 +41,10 @@ func (ur *UserRepo) AddUser(email string, username string, password string) (*Us
 	}
 	defer tx.Rollback()
 
-	query := `INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id`
+	query := `INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email`
 
 	user := &User{}
-	err = tx.QueryRow(query, username, email, passwordHash).Scan(&user.Id)
+	err = tx.QueryRow(query, username, email, passwordHash).Scan(&user.Id, &user.Username, &user.Email)
 	if err != nil {
 		fmt.Println("Insert Error", err)
 		return nil, err
@@ -67,10 +67,11 @@ func (ur *UserRepo) GetUser(userId string) (*User, error) {
 }
 
 func (ur *UserRepo) Login(emailUsername string, password string) (*User, error) {
-	query := `SELECT id, username, email, password_hash FROM users WHERE email = $1 OR username = $1`
-	row := ur.db.QueryRow(query, emailUsername)
+	query := `SELECT id, username, email, password_hash FROM users WHERE email = $1 OR username = $1
+						RETURNING id, username, email`
+
 	user := &User{}
-	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.Password)
+	err := ur.db.QueryRow(query, emailUsername).Scan(&user.Id, &user.Username, &user.Email)
 	if err != nil {
 		return nil, err
 	}

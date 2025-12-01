@@ -11,13 +11,14 @@ import (
 )
 
 type User struct {
-	room *Room
-	conn *websocket.Conn
-	send chan []byte
-	id   string
+	room     *Room
+	conn     *websocket.Conn
+	send     chan []byte
+	id       string
+	username string
 }
 
-func ConnectToRoom(room Room, userId string, messageRepo repo.MessageRepository, w http.ResponseWriter, r *http.Request) error {
+func ConnectToRoom(room Room, userId string, username string, messageRepo repo.MessageRepository, w http.ResponseWriter, r *http.Request) error {
 	var upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			return true // allow all origins
@@ -33,10 +34,11 @@ func ConnectToRoom(room Room, userId string, messageRepo repo.MessageRepository,
 	}
 
 	user := &User{
-		room: &room,
-		conn: conn,
-		send: make(chan []byte, 256),
-		id:   userId,
+		room:     &room,
+		conn:     conn,
+		send:     make(chan []byte, 256),
+		id:       userId,
+		username: username,
 	}
 
 	fmt.Printf("User Created %s\n", user.id)
@@ -51,7 +53,6 @@ func ConnectToRoom(room Room, userId string, messageRepo repo.MessageRepository,
 
 func (c *User) readPump(messageRepo repo.MessageRepository) {
 	defer func() {
-		fmt.Println("readPump exiting for user:", c.conn.RemoteAddr())
 		c.room.unregister <- c
 		c.conn.Close()
 	}()
@@ -61,12 +62,12 @@ func (c *User) readPump(messageRepo repo.MessageRepository) {
 			log.Println("read:", err)
 			break
 		}
-		fmt.Printf("Received message: %s,%s\n", c.id, message)
 		var msg = repo.Message{
-			RoomId:  c.room.ID,
-			UserId:  c.id,
-			Content: string(message),
-			IsError: false,
+			RoomId:   c.room.ID,
+			UserId:   c.id,
+			Username: c.username,
+			Content:  string(message),
+			IsError:  false,
 		}
 		msgByte, err := json.Marshal(msg)
 		if err != nil {

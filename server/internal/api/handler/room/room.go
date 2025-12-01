@@ -4,10 +4,10 @@ import (
 	"duhchat/internal/repo"
 	"duhchat/internal/ws"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type JoinRoomHandler struct {
@@ -22,9 +22,16 @@ func NewJoinRoomHandler(joinRoomRepo repo.JoinRoomRepository, messageRepo repo.M
 
 func (rr *JoinRoomHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 	roomId := r.URL.Query().Get("roomId")
-	userId := r.URL.Query().Get("userId")
 
-	userRoom := &repo.UserRoom{RoomId: roomId, UserId: userId}
+	claims := r.Context().Value("user").(jwt.MapClaims)
+	if claims == nil {
+		http.Error(w, "Can't find userId ", http.StatusInternalServerError)
+		return
+	}
+	userId := claims["userId"].(string)
+	username := claims["username"].(string)
+
+	userRoom := &repo.UserRoom{RoomId: roomId, UserId: userId, Username: username}
 
 	err := validator.New().Struct(userRoom)
 	if err != nil {
@@ -32,14 +39,12 @@ func (rr *JoinRoomHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("Available Hub IDs:", rr.hub.Rooms)
-
 	room, exists := rr.hub.Rooms[userRoom.RoomId]
 	if !exists {
 		http.Error(w, "Room not found", http.StatusNotFound)
 		return
 	}
-	err = ws.ConnectToRoom(room, userRoom.UserId, rr.messageRepo, w, r)
+	err = ws.ConnectToRoom(room, userRoom.UserId, userRoom.Username, rr.messageRepo, w, r)
 	if err != nil {
 		http.Error(w, "Failed at Connect To Room", http.StatusInternalServerError)
 		return
