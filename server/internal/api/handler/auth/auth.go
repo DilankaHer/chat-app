@@ -3,7 +3,6 @@ package handler
 import (
 	"duhchat/internal/repo"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -12,9 +11,8 @@ import (
 )
 
 type Response struct {
-	Message string      `json:"message"`
-	Rooms   []repo.Room `json:"rooms"`
-	UserId  string      `json:"userId"`
+	Message string `json:"message"`
+	UserId  string `json:"userId"`
 }
 
 type Login struct {
@@ -28,16 +26,15 @@ type Signup struct {
 	Password string `json:"password" validate:"required"`
 }
 
-type LoginHandler struct {
-	userRepo repo.UserRepository
+type AuthHandler struct {
+	userRepository repo.UserRepository
 }
 
-func NewLoginHandler(userRepo repo.UserRepository) *LoginHandler {
-	return &LoginHandler{userRepo: userRepo}
+func NewAuthHandler(userRepository repo.UserRepository) *AuthHandler {
+	return &AuthHandler{userRepository: userRepository}
 }
 
-func (uh *LoginHandler) Signup(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Signup")
+func (ah *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -58,13 +55,14 @@ func (uh *LoginHandler) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := uh.userRepo.AddUser(signup.Email, signup.Username, signup.Password)
+	user := repo.User{Email: signup.Email, Username: signup.Username, Password: signup.Password}
+	err = ah.userRepository.AddUser(&user)
 	if err != nil {
 		http.Error(w, "SignUp Failed at Add User", http.StatusInternalServerError)
 		return
 	}
 
-	err = SetJWTCookie(&w, user)
+	err = SetJWTCookie(&w, &user)
 	if err != nil {
 		http.Error(w, "SignUp Failed at Set JWT Cookie", http.StatusInternalServerError)
 		return
@@ -72,25 +70,14 @@ func (uh *LoginHandler) Signup(w http.ResponseWriter, r *http.Request) {
 
 	response := Response{
 		Message: "SignUp Successful",
-		UserId:  user.Id,
+		UserId:  user.UserId,
 	}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 }
 
-func (uh *LoginHandler) GetMe(w http.ResponseWriter, r *http.Request) {
-	userId := r.Context().Value("user").(jwt.MapClaims)["userId"].(string)
-	user, err := uh.userRepo.GetUser(userId)
-	if err != nil {
-		http.Error(w, "Failed to Get User", http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
-}
-
-func (uh *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -111,13 +98,14 @@ func (uh *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := uh.userRepo.Login(login.EmailUsername, login.Password)
+	user := repo.User{EmailUsername: login.EmailUsername, Password: login.Password}
+	err = ah.userRepository.Login(&user)
 	if err != nil {
 		http.Error(w, "Credentials are not correct", http.StatusUnauthorized)
 		return
 	}
 
-	err = SetJWTCookie(&w, user)
+	err = SetJWTCookie(&w, &user)
 	if err != nil {
 		http.Error(w, "Login Failed at Set JWT Cookie", http.StatusInternalServerError)
 		return
@@ -125,18 +113,30 @@ func (uh *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	response := Response{
 		Message: "Login Successful",
-		UserId:  user.Id,
+		UserId:  user.UserId,
 	}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 }
 
+func (ah *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value("user").(jwt.MapClaims)["userId"].(string)
+	user := repo.User{UserId: userId}
+	err := ah.userRepository.GetUser(&user)
+	if err != nil {
+		http.Error(w, "Failed to Get User", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(user)
+}
+
 func SetJWTCookie(w *http.ResponseWriter, user *repo.User) error {
 	tokenString, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": user.Username,
 		"email":    user.Email,
-		"userId":   user.Id,
+		"userId":   user.UserId,
 	}).SignedString([]byte("k8f9+2aV3b7XcQpL6eR1yT0uN4wZ5vQ2"))
 	if err != nil {
 		return err
@@ -146,7 +146,7 @@ func SetJWTCookie(w *http.ResponseWriter, user *repo.User) error {
 		Name:     "jwt",
 		Value:    tokenString,
 		Path:     "/",
-		HttpOnly: true,  // JavaScript cannot read it
+		HttpOnly: true,
 		Secure:   false, // set to true in production (HTTPS only)
 		SameSite: http.SameSiteLaxMode,
 	})

@@ -10,7 +10,7 @@ import (
 	"github.com/go-chi/cors"
 )
 
-func SetupRoutes(loginHandler *auth.LoginHandler, joinRoomHandler *room.JoinRoomHandler, messageHandler *message.MessageHandler) *chi.Mux {
+func SetupRoutes(loginHandler *auth.AuthHandler, joinRoomHandler *room.RoomHandler, messageHandler *message.MessageHandler) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
@@ -33,6 +33,7 @@ func SetupRoutes(loginHandler *auth.LoginHandler, joinRoomHandler *room.JoinRoom
 		pr.Use(middleware.JWTAuth)
 		pr.Get("/joinRoom", joinRoomHandler.JoinRoom)
 		pr.Get("/me", loginHandler.GetMe)
+		pr.Post("/createRoom", joinRoomHandler.CreateRoom)
 		// add more protected routes here
 	})
 

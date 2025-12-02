@@ -14,11 +14,11 @@ type User struct {
 	room     *Room
 	conn     *websocket.Conn
 	send     chan []byte
-	id       string
+	userId   string
 	username string
 }
 
-func ConnectToRoom(room Room, userId string, username string, messageRepo repo.MessageRepository, w http.ResponseWriter, r *http.Request) error {
+func ConnectToRoom(room Room, userId string, username string, messageRepository repo.MessageRepository, w http.ResponseWriter, r *http.Request) error {
 	var upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			return true // allow all origins
@@ -37,16 +37,16 @@ func ConnectToRoom(room Room, userId string, username string, messageRepo repo.M
 		room:     &room,
 		conn:     conn,
 		send:     make(chan []byte, 256),
-		id:       userId,
+		userId:   userId,
 		username: username,
 	}
 
-	fmt.Printf("User Created %s\n", user.id)
+	fmt.Printf("User Created %s\n", user.userId)
 
 	room.register <- user
 
 	go user.writePump()
-	go user.readPump(messageRepo)
+	go user.readPump(messageRepository)
 
 	return nil
 }
@@ -63,8 +63,8 @@ func (c *User) readPump(messageRepo repo.MessageRepository) {
 			break
 		}
 		var msg = repo.Message{
-			RoomId:   c.room.ID,
-			UserId:   c.id,
+			RoomId:   c.room.RoomId,
+			UserId:   c.userId,
 			Username: c.username,
 			Content:  string(message),
 			IsError:  false,
@@ -76,7 +76,7 @@ func (c *User) readPump(messageRepo repo.MessageRepository) {
 			c.conn.WriteJSON(msg)
 			continue
 		}
-		err = messageRepo.SendMessage(&msg)
+		err = messageRepo.AddMessasge(&msg)
 		if err != nil {
 			log.Println("failed to send message", err)
 			msg.IsError = true

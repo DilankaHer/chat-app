@@ -7,8 +7,8 @@ import (
 )
 
 type Hub struct {
-	Rooms        map[string]Room
-	joinRoomRepo repo.JoinRoomRepository
+	Rooms    map[string]Room
+	roomRepository repo.RoomRepository
 }
 
 type Room struct {
@@ -16,60 +16,72 @@ type Room struct {
 	broadcast  chan []byte
 	register   chan *User
 	unregister chan *User
-	ID         string
+	RoomId     string
 }
 
-func NewHub(joinRoomRepo repo.JoinRoomRepository) *Hub {
+func NewHub(roomRepository repo.RoomRepository) *Hub {
 	return &Hub{
-		Rooms:        make(map[string]Room),
-		joinRoomRepo: joinRoomRepo,
+		Rooms:    make(map[string]Room),
+		roomRepository: roomRepository,
 	}
 }
 
-func (h *Hub) CreateRoom(id string) {
-	h.Rooms[id] = Room{
+func (h *Hub) CreateRoom(roomId string) error {
+	h.Rooms[roomId] = Room{
 		users:      make(map[*User]bool),
 		broadcast:  make(chan []byte),
 		register:   make(chan *User),
 		unregister: make(chan *User),
-		ID:         id,
+		RoomId:     roomId,
 	}
+
+	fmt.Println("New Room ID", roomId)
+	err := h.AddNewRoom(roomId)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (h *Hub) Run() error {
-	roomIds, err := h.joinRoomRepo.GetRoomIds()
+func (h *Hub) CreateDefaultRooms() error {
+	roomIds, err := h.roomRepository.GetRoomIds()
 	if err != nil {
 		log.Fatal("Failed to get room IDs:", err)
 		return err
 	}
 	for _, roomId := range roomIds {
 		h.CreateRoom(roomId)
-		room := h.Rooms[roomId]
-		go func() {
-			for {
-				select {
-				case user := <-room.register:
+	}
+	return nil
+}
+
+func (h *Hub) AddNewRoom(roomId string) error {
+	room := h.Rooms[roomId]
+	go func() error {
+		for {
+			select {
+			case user := <-room.register:
 					fmt.Println("User registered", user)
 					room.users[user] = true
-					err := h.joinRoomRepo.JoinRoom(&repo.UserRoom{
-						UserId: user.id,
-						RoomId: room.ID,
+					err := h.roomRepository.JoinRoom(&repo.UserRoom{
+						UserId: user.userId,
+						RoomId: room.RoomId,
 					})
 					if err != nil {
 						delete(room.users, user)
 						close(user.send)
 						log.Println("Failed to join room:", err)
-						return
+						return err
 					}
 				case user := <-room.unregister:
 					if _, ok := room.users[user]; ok {
 						fmt.Printf("User unregistered")
 						delete(room.users, user)
 						close(user.send)
-						err := h.joinRoomRepo.DeleteRoomUsersByUserId(user.id)
+						err := h.roomRepository.DeleteRoomUsersByUserId(user.userId)
 						if err != nil {
 							log.Println("Failed to delete room users:", err)
-							return
+							return err
 						}
 					}
 				case message := <-room.broadcast:
@@ -85,7 +97,6 @@ func (h *Hub) Run() error {
 				}
 			}
 		}()
-	}
 
-	return nil
-}
+		return nil
+	}

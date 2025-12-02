@@ -2,14 +2,14 @@ package repo
 
 import "database/sql"
 
-type JoinRoomRepository interface {
+type RoomRepository interface {
 	JoinRoom(room *UserRoom) error
+	CreateRoom(room *Room) error
 	GetRoomIds() ([]string, error)
 	DeleteRoomUsersByUserId(userId string) error
 	GetRooms() ([]Room, error)
 }
-
-type JoinRoomRepo struct {
+type RoomRepo struct {
 	db *sql.DB
 }
 
@@ -21,15 +21,15 @@ type UserRoom struct {
 }
 
 type Room struct {
-	Id   string `json:"id"`
+	RoomId   string `json:"roomId"`
 	Name string `json:"name"`
 }
 
-func NewJoinRoomRepo(db *sql.DB) JoinRoomRepository {
-	return &JoinRoomRepo{db: db}
+func NewRoomRepo(db *sql.DB) RoomRepository {
+	return &RoomRepo{db: db}
 }
 
-func (rr *JoinRoomRepo) JoinRoom(room *UserRoom) error {
+func (rr *RoomRepo) JoinRoom(room *UserRoom) error {
 	tx, err := rr.db.Begin()
 	if err != nil {
 		return err
@@ -48,7 +48,26 @@ func (rr *JoinRoomRepo) JoinRoom(room *UserRoom) error {
 	return nil
 }
 
-func (rr *JoinRoomRepo) GetRoomIds() ([]string, error) {
+func (rr *RoomRepo) CreateRoom(room *Room) error {
+	tx, err := rr.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	query := `INSERT INTO rooms (name) VALUES ($1) RETURNING id`
+
+	err = tx.QueryRow(query, room.Name).Scan(&room.RoomId)
+	if err != nil {
+		return err
+	}
+
+	tx.Commit()
+
+	return nil
+}
+
+func (rr *RoomRepo) GetRoomIds() ([]string, error) {
 	query := `SELECT id FROM rooms`
 
 	var ids []string
@@ -69,7 +88,7 @@ func (rr *JoinRoomRepo) GetRoomIds() ([]string, error) {
 	return ids, nil
 }
 
-func (rr *JoinRoomRepo) DeleteRoomUsersByUserId(userId string) error {
+func (rr *RoomRepo) DeleteRoomUsersByUserId(userId string) error {
 	query := `DELETE FROM rooms_users WHERE user_id = $1`
 
 	_, err := rr.db.Exec(query, userId)
@@ -80,7 +99,7 @@ func (rr *JoinRoomRepo) DeleteRoomUsersByUserId(userId string) error {
 	return nil
 }
 
-func (rr *JoinRoomRepo) GetRooms() ([]Room, error) {
+func (rr *RoomRepo) GetRooms() ([]Room, error) {
 	query := `SELECT id, name FROM rooms`
 
 	var rooms []Room
@@ -91,7 +110,7 @@ func (rr *JoinRoomRepo) GetRooms() ([]Room, error) {
 
 	for rows.Next() {
 		var room Room
-		err := rows.Scan(&room.Id, &room.Name)
+		err := rows.Scan(&room.RoomId, &room.Name)
 		if err != nil {
 			return nil, err
 		}

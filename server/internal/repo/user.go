@@ -8,76 +8,75 @@ import (
 )
 
 type UserRepository interface {
-	AddUser(email string, username string, password string) (*User, error)
-	GetUser(userId string) (*User, error)
-	Login(emailUsername string, password string) (*User, error)
+	Login(user *User) error
+	AddUser(user *User) error
+	GetUser(user *User) error
 }
-
 type UserRepo struct {
 	db *sql.DB
 }
 
 type User struct {
-	Id       string `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	UserId        string `json:"userId"`
+	Username      string `json:"username"`
+	Email         string `json:"email"`
+	Password      string `json:"password"`
+	EmailUsername string `json:"-"`
 }
 
 func NewUserRepo(db *sql.DB) UserRepository {
 	return &UserRepo{db: db}
 }
 
-func (ur *UserRepo) AddUser(email string, username string, password string) (*User, error) {
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+func (ur *UserRepo) Login(user *User) error {
+	fmt.Println("Login", user)
+	query := `SELECT id, username, email, password_hash FROM users WHERE email = $1 OR username = $1`
+
+	var passwordHash []byte
+	err := ur.db.QueryRow(query, user.EmailUsername).Scan(&user.UserId, &user.Username, &user.Email, &passwordHash)
+	if err != nil {
+		fmt.Println("Scan Error", err)
+		return err
+	}
+	err = bcrypt.CompareHashAndPassword(passwordHash, []byte(user.Password))
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return err
+	}
+	return nil
+}
+
+func (ur *UserRepo) AddUser(user *User) error {
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		fmt.Println(err)
+		return err
 	}
 	tx, err := ur.db.Begin()
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return err
 	}
 	defer tx.Rollback()
 
-	query := `INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email`
+	query := `INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id`
 
-	user := &User{}
-	err = tx.QueryRow(query, username, email, passwordHash).Scan(&user.Id, &user.Username, &user.Email)
+	err = tx.QueryRow(query, user.Username, user.Email, passwordHash).Scan(&user.UserId)
 	if err != nil {
 		fmt.Println("Insert Error", err)
-		return nil, err
+		return err
 	}
 
 	tx.Commit()
 
-	return user, nil
+	return nil
 }
 
-func (ur *UserRepo) GetUser(userId string) (*User, error) {
-	query := `SELECT id, username, email FROM users WHERE id = $1`
-	row := ur.db.QueryRow(query, userId)
-	user := &User{}
-	err := row.Scan(&user.Id, &user.Username, &user.Email)
+func (ur *UserRepo) GetUser(user *User) error {
+	query := `SELECT username, email FROM users WHERE id = $1`
+	err := ur.db.QueryRow(query, user.UserId).Scan(&user.Username, &user.Email)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return user, nil
-}
-
-func (ur *UserRepo) Login(emailUsername string, password string) (*User, error) {
-	query := `SELECT id, username, email, password_hash FROM users WHERE email = $1 OR username = $1
-						RETURNING id, username, email`
-
-	user := &User{}
-	err := ur.db.QueryRow(query, emailUsername).Scan(&user.Id, &user.Username, &user.Email)
-	if err != nil {
-		return nil, err
-	}
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
+	return nil
 }

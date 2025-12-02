@@ -28,16 +28,16 @@ func main() {
 		panic(err)
 	}
 	userRepo := repo.NewUserRepo(db)
-	joinRoomRepo := repo.NewJoinRoomRepo(db)
+	roomRepo := repo.NewRoomRepo(db)
 	messageRepo := repo.NewMessageRepo(db)
 
-	hub := ws.NewHub(joinRoomRepo)
-	if err := hub.Run(); err != nil {
+	hub := ws.NewHub(roomRepo)
+	if err := hub.CreateDefaultRooms(); err != nil {
 		panic(err)
 	}
 
-	loginHandler := auth.NewLoginHandler(userRepo)
-	roomUserHandler := room.NewJoinRoomHandler(joinRoomRepo, messageRepo, hub)
+	loginHandler := auth.NewAuthHandler(userRepo)
+	roomUserHandler := room.NewRoomHandler(roomRepo, messageRepo, hub)
 	messageHandler := message.NewMessageHandler(messageRepo)
 
 	r := routes.SetupRoutes(loginHandler, roomUserHandler, messageHandler)

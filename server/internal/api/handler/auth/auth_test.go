@@ -3,80 +3,73 @@ package handler
 import (
 	"bytes"
 	"duhchat/internal/repo"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
 type mockUserRepo struct {
-	AddUserFn func(email string, username string, password string) (*repo.User, error)
-	GetUserFn func(userId string) (*repo.User, error)
-	LoginFn   func(emailUsername string, password string) (*repo.User, error)
 }
 
-func (m *mockUserRepo) AddUser(email string, username string, password string) (*repo.User, error) {
-	return m.AddUserFn(email, username, password)
+func (m *mockUserRepo) AddUser(user *repo.User) error {
+	user.UserId = "283120389013489210"
+	user.Email = "john@gmail.com"
+	user.Username = "john"
+	user.EmailUsername = "john"
+	return nil
 }
 
-func (m *mockUserRepo) GetUser(userId string) (*repo.User, error) {
-	return m.GetUserFn(userId)
+func (m *mockUserRepo) GetUser(user *repo.User) error {
+	user.UserId = "283120389013489210"
+	user.Email = "john@gmail.com"
+	user.Username = "john"
+	user.EmailUsername = "john"
+	return nil
 }
 
-func (m *mockUserRepo) Login(emailUsername string, password string) (*repo.User, error) {
-	return m.LoginFn(emailUsername, password)
+func (m *mockUserRepo) Login(user *repo.User) error {
+	user.UserId = "283120389013489210"
+	user.Email = "john@gmail.com"
+	user.Username = "john"
+	user.EmailUsername = "john"
+	return nil
 }
 func TestLogin(t *testing.T) {
-	mockRepo := &mockUserRepo{
-		AddUserFn: func(email string, username string, password string) (*repo.User, error) {
-			user := &repo.User{
-				Id:       "1",
-				Username: username,
-				Email:    email,
-				Password: password,
-			}
-			return user, nil
-		},
-		GetUserFn: func(userId string) (*repo.User, error) {
-			return &repo.User{
-				Id:       "1",
-				Username: "john",
-				Email:    "john@example.com",
-				Password: "",
-			}, nil
-		},
-		LoginFn: func(emailUsername string, password string) (*repo.User, error) {
-			return &repo.User{
-				Id:       "1",
-				Username: "john",
-				Email:    "john@example.com",
-				Password: "",
-			}, nil
-		},
-	}
+	mockRepo := &mockUserRepo{}
 
-	lh := NewLoginHandler(mockRepo)
+	ah := NewAuthHandler(mockRepo)
 
 	jsonBody := `{
-		"username": "john",
-		"email": "john@example.com",
+		"emailUsername": "john",
 		"password": "password"
 	}`
 
 	req := httptest.NewRequest(http.MethodPost, "/login", bytes.NewBufferString(jsonBody))
 	w := httptest.NewRecorder()
 
-	lh.Login(w, req)
+	ah.Login(w, req)
 
 	resp := w.Result()
+
+	fmt.Println(resp)
 
 	if resp.StatusCode != http.StatusOK {
 		t.Fatalf("expected status 200, got %d", resp.StatusCode)
 	}
 
 	// Check response body
-	body := w.Body.String()
-	if body != "Login Successful" {
+	body := Response{}
+	err := json.Unmarshal(w.Body.Bytes(), &body)
+	if err != nil {
+		t.Fatalf("can't unmarshal response body")
+	}
+	if body.Message != "Login Successful" {
 		t.Fatalf("expected Login Successful, got %s", body)
+	}
+	if body.UserId == "" {
+		t.Fatalf("expected UserId to not be empty, got %s", body)
 	}
 
 	// Check if cookie is set
@@ -87,5 +80,9 @@ func TestLogin(t *testing.T) {
 
 	if cookie[0].Name != "jwt" {
 		t.Fatalf("expected cookie name 'jwt', got %s", cookie[0].Name)
+	}
+
+	if cookie[0].Value != "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImpvaG5AZ21haWwuY29tIiwidXNlcklkIjoiMjgzMTIwMzg5MDEzNDg5MjEwIiwidXNlcm5hbWUiOiJqb2huIn0.yVmb4FenrNcpNMpOdRgLrUtSNx8o2Ajv5vFMOO6EjPQ" {
+		t.Fatalf("expected cookie to match, got %s", cookie[0].Value)
 	}
 }

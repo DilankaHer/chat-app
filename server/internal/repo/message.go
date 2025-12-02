@@ -3,28 +3,27 @@ package repo
 import "database/sql"
 
 type MessageRepository interface {
-	SendMessage(message *Message) error
+	AddMessasge(message *Message) error
 	GetMessagesByRoomId(roomId string) ([]Message, error)
 }
 
 type MessageRepo struct {
 	db *sql.DB
 }
-
 type Message struct {
-	Id       string `json:"id"`
-	RoomId   string `json:"roomId" validate:"required"`
-	UserId   string `json:"userId" validate:"required"`
-	Username string `json:"username" validate:"required"`
-	Content  string `json:"content" validate:"required"`
-	IsError  bool   `json:"isError"`
+	MessageId string `json:"messageId"`
+	RoomId    string `json:"roomId" validate:"required"`
+	UserId    string `json:"userId" validate:"required"`
+	Username  string `json:"username" validate:"required"`
+	Content   string `json:"content" validate:"required"`
+	IsError   bool   `json:"isError"`
 }
 
 func NewMessageRepo(db *sql.DB) MessageRepository {
 	return &MessageRepo{db: db}
 }
 
-func (mr *MessageRepo) SendMessage(message *Message) error {
+func (mr *MessageRepo) AddMessasge(message *Message) error {
 	tx, err := mr.db.Begin()
 	if err != nil {
 		return err
@@ -33,7 +32,7 @@ func (mr *MessageRepo) SendMessage(message *Message) error {
 
 	query := `INSERT INTO messages (room_id, user_id, content) VALUES ($1, $2, $3) RETURNING id`
 
-	err = tx.QueryRow(query, message.RoomId, message.UserId, message.Content).Scan(&message.Id)
+	err = tx.QueryRow(query, message.RoomId, message.UserId, message.Content).Scan(&message.MessageId)
 	if err != nil {
 		return err
 	}
@@ -55,7 +54,7 @@ func (mr *MessageRepo) GetMessagesByRoomId(roomId string) ([]Message, error) {
 	var messages []Message
 	for rows.Next() {
 		var message Message
-		err := rows.Scan(&message.Id, &message.RoomId, &message.UserId, &message.Content, &message.Username)
+		err := rows.Scan(&message.MessageId, &message.RoomId, &message.UserId, &message.Content, &message.Username)
 		if err != nil {
 			return nil, err
 		}
