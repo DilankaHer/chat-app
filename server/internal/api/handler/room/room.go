@@ -1,8 +1,10 @@
 package handler
 
 import (
+	"duhchat/internal/api/model"
 	"duhchat/internal/repo"
 	"duhchat/internal/ws"
+	"duhchat/util"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -30,28 +32,28 @@ func (rr *RoomHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 
 	claims := r.Context().Value("user").(jwt.MapClaims)
 	if claims == nil {
-		http.Error(w, "Can't find userId ", http.StatusInternalServerError)
+		util.JSONMarshaller(w, http.StatusInternalServerError, "Can't find userId ")
 		return
 	}
 	userId := claims["userId"].(string)
 	username := claims["username"].(string)
 
-	userRoom := &repo.UserRoom{RoomId: roomId, UserId: userId, Username: username}
+	userRoom := &model.UserRoom{RoomId: roomId, UserId: userId, Username: username}
 
 	err := validator.New().Struct(userRoom)
 	if err != nil {
-		http.Error(w, "Join Room Failed at Struct Level: "+err.Error(), http.StatusBadRequest)
+		util.JSONMarshaller(w, http.StatusBadRequest, "Join Room Failed at Struct Level: "+err.Error())
 		return
 	}
 
 	room, exists := rr.hub.Rooms[userRoom.RoomId]
 	if !exists {
-		http.Error(w, "Room not found", http.StatusNotFound)
+		util.JSONMarshaller(w, http.StatusNotFound, "Room not found")
 		return
 	}
 	err = ws.ConnectToRoom(room, userRoom.UserId, userRoom.Username, rr.messageRepository, w, r)
 	if err != nil {
-		http.Error(w, "Failed at Connect To Room", http.StatusInternalServerError)
+		util.JSONMarshaller(w, http.StatusInternalServerError, "Failed at Connect To Room")
 		return
 	}
 }

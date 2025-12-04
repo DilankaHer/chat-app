@@ -23,17 +23,17 @@ func SetupRoutes(loginHandler *auth.AuthHandler, joinRoomHandler *room.RoomHandl
 	}))
 
 	// public routes (NO middleware)
-	r.Get("/rooms", joinRoomHandler.GetRooms)
-	r.Get("/messages", messageHandler.GetMessagesByRoomId)
-	r.Post("/signup", loginHandler.Signup)
-	r.Post("/login", loginHandler.Login)
+	r.Get("/rooms", middleware.StandardResponse(joinRoomHandler.GetRooms))
+	r.Get("/messages", middleware.StandardResponse(messageHandler.GetMessagesByRoomId))
+	r.Post("/signup", middleware.StandardResponse(loginHandler.Signup))
+	r.Post("/login", middleware.StandardResponse(loginHandler.Login))
 
 	// private routes (WITH JWT middleware)
 	r.Group(func(pr chi.Router) {
 		pr.Use(middleware.JWTAuth)
-		pr.Get("/joinRoom", joinRoomHandler.JoinRoom)
-		pr.Get("/me", loginHandler.GetMe)
-		pr.Post("/createRoom", joinRoomHandler.CreateRoom)
+		pr.Get("/joinRoom", middleware.StandardResponse(joinRoomHandler.JoinRoom))
+		pr.Get("/me", middleware.StandardResponse(loginHandler.GetMe))
+		pr.Post("/createRoom", middleware.StandardResponse(joinRoomHandler.CreateRoom))
 		// add more protected routes here
 	})
 

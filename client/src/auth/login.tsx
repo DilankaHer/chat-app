@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type { LoginState } from "../App";
+import { useApi, type ApiRequest } from "../utils/apiRequest";
 
 function Login({ setLoginState }: { setLoginState: (loginState: LoginState) => void }) {
   interface LoginData {
@@ -8,6 +9,7 @@ function Login({ setLoginState }: { setLoginState: (loginState: LoginState) => v
     password: string;
     username?: string;
   }
+  const { apiRequest } = useApi();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -20,39 +22,30 @@ function Login({ setLoginState }: { setLoginState: (loginState: LoginState) => v
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let url = ""
-    let body: BodyInit | null | undefined = null;
+    let req: ApiRequest;
     if (isSignup) {
       const signupData: LoginData = { email, password, username };
       url = "http://localhost:8080/signup"
-      body = JSON.stringify(signupData);
+      req = {url, method: "POST", body: signupData};
     } else {
       const emailUsername = email;
       const loginData: LoginData = { emailUsername, password };
       url = "http://localhost:8080/login"
-      body = JSON.stringify(loginData);
+      req = {url, method: "POST", body: loginData};
     }
-    try {
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: body,
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      const data = await response.json();
-      console.log(data);
+    apiRequest(req, handleErrorLogin).then(response => {
       setLoginState({
         isLoginSuccess: true,
-        userId: data.userId,
+        userId: response.data.userId,
       });
-    } catch (error) {
-      console.error('Login failed:', error);
-    }
+    }).catch(error => {
+      // console.error('Login failed:', error);
+    });
   };
+
+  const handleErrorLogin = () => {
+    console.error('Login failed:');
+  }
 
   return (
     <div className="flex items-center justify-center">

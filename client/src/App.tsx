@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import Login from "./auth/login";
 import Room from "./Room";
+import { useApi, type ApiRequest } from "./utils/apiRequest";
 
 export interface LoginState {
     isLoginSuccess: boolean;
@@ -11,6 +12,7 @@ interface Room {
     name: string;
 }
 function App() {
+  const { apiRequest } = useApi();
   const [loginState, setLoginState] = useState<LoginState>({
     isLoginSuccess: false,
     userId: "",
@@ -20,62 +22,48 @@ function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [text, setText] = useState("");
 
-  const handleCreateRoom = (e: React.FormEvent) => {
+  const handleCreateRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     const roomName = text;
-    fetch("http://localhost:8080/createRoom", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({ roomName: roomName }),
-    })
-      .then(res => {
-        if (res.status !== 200) throw new Error("Failed to create room");
-        return res.json();
-      })
-      .then(room => {
-        setRooms([...rooms, room]);
-      })
-      .catch((error) => {
-        console.log("Failed to create room", error);
-      });
+    const req: ApiRequest = {url: "http://localhost:8080/createRoom", method: "POST", body: { roomName: roomName }};
+    apiRequest(req).then(response => {
+      setRooms([...rooms, response.data]);
+    }).catch(() => {
+      setRooms([]);
+    });
   }
 
   useEffect(() => {
-  fetch("http://localhost:8080/me", {
-    credentials: "include"
-  })
-    .then(res => {
-      if (res.status === 200) return res.json();
-      throw new Error("Not logged in");
-    })
-    .then(user => {
-      setLoginState({isLoginSuccess: true, userId: user.userId}); // logged in
+    const req: ApiRequest = {url: "http://localhost:8080/me", method: "GET"};
+    apiRequest(req, handleError).then((response: { data: { userId: any; }; }) => {
+      setLoginState({isLoginSuccess: true, userId: response.data.userId});
       setIsLoading(false);
-    })
-    .catch(() => {
-      setLoginState({isLoginSuccess: false, userId: ""}); // not logged in
+    }).catch(() => {
+      setLoginState({isLoginSuccess: false, userId: ""});
       setIsLoading(false);
     });
-}, []);
+  }, [loginState.isLoginSuccess]);
 
 useEffect(() => {
   if (loginState.isLoginSuccess) {
-    fetch("http://localhost:8080/rooms", {
-      credentials: "include"
-    })
-      .then(res => {
-        if (res.status === 200) return res.json();
-        throw new Error("Failed to get rooms");
-      })
-      .then(rooms => {
-        setRooms(rooms); // logged in
-      })
-      .catch(() => setRooms([])); // not logged in
+    const req: ApiRequest = {url: "http://localhost:8080/rooms", method: "GET"};
+    apiRequest(req).then(response => {
+      console.log(response.data);
+      setRooms(response.data);
+    }).catch(() => {
+      setRooms([]);
+    });
   }
 }, [loginState.isLoginSuccess]);
+
+useEffect(() => {
+  console.log(rooms);
+}, [rooms]);
+
+const handleError = () => {
+  console.log("error");
+  setLoginState({isLoginSuccess: false, userId: ""});
+}
 
   return (
     <div className="p-40">

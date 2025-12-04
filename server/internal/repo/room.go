@@ -1,9 +1,12 @@
 package repo
 
-import "database/sql"
+import (
+	"database/sql"
+	"duhchat/internal/api/model"
+)
 
 type RoomRepository interface {
-	JoinRoom(room *UserRoom) error
+	JoinRoom(room *model.UserRoom) error
 	CreateRoom(room *Room) error
 	GetRoomIds() ([]string, error)
 	DeleteRoomUsersByUserId(userId string) error
@@ -13,23 +16,16 @@ type RoomRepo struct {
 	db *sql.DB
 }
 
-type UserRoom struct {
-	Id     string `json:"id"`
-	RoomId string `json:"roomId" validate:"required"`
-	UserId string `json:"userId" validate:"required"`
-	Username string `json:"username" validate:"required"`
-}
-
 type Room struct {
-	RoomId   string `json:"roomId"`
-	Name string `json:"name"`
+	RoomId string `json:"roomId"`
+	Name   string `json:"name"`
 }
 
 func NewRoomRepo(db *sql.DB) RoomRepository {
 	return &RoomRepo{db: db}
 }
 
-func (rr *RoomRepo) JoinRoom(room *UserRoom) error {
+func (rr *RoomRepo) JoinRoom(room *model.UserRoom) error {
 	tx, err := rr.db.Begin()
 	if err != nil {
 		return err

@@ -35,12 +35,10 @@ func (ur *UserRepo) Login(user *User) error {
 	var passwordHash []byte
 	err := ur.db.QueryRow(query, user.EmailUsername).Scan(&user.UserId, &user.Username, &user.Email, &passwordHash)
 	if err != nil {
-		fmt.Println("Scan Error", err)
 		return err
 	}
 	err = bcrypt.CompareHashAndPassword(passwordHash, []byte(user.Password))
 	if err != nil {
-		fmt.Println(err)
 		return err
 	}
 	return nil

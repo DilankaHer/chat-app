@@ -2,6 +2,7 @@ package handler
 
 import (
 	"duhchat/internal/repo"
+	"duhchat/util"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -81,33 +82,33 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Login Failed at Read All", http.StatusInternalServerError)
+		util.JSONMarshaller(w, http.StatusInternalServerError, "Login Failed")
 		return
 	}
 
 	login := &Login{}
 	err = json.Unmarshal(body, login)
 	if err != nil {
-		http.Error(w, "Login Failed at Unmarshal: "+err.Error(), http.StatusBadRequest)
+		util.JSONMarshaller(w, http.StatusBadRequest, "Login Failed")
 		return
 	}
 
 	err = validator.New().Struct(login)
 	if err != nil {
-		http.Error(w, "Login Failed at Struct Level: "+err.Error(), http.StatusBadRequest)
+		util.JSONMarshaller(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	user := repo.User{EmailUsername: login.EmailUsername, Password: login.Password}
 	err = ah.userRepository.Login(&user)
 	if err != nil {
-		http.Error(w, "Credentials are not correct", http.StatusUnauthorized)
+		util.JSONMarshaller(w, http.StatusUnauthorized, err.Error())
 		return
 	}
 
 	err = SetJWTCookie(&w, &user)
 	if err != nil {
-		http.Error(w, "Login Failed at Set JWT Cookie", http.StatusInternalServerError)
+		util.JSONMarshaller(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -116,8 +117,7 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		UserId:  user.UserId,
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	util.JSONMarshaller(w, http.StatusOK, response)
 }
 
 func (ah *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
@@ -125,11 +125,10 @@ func (ah *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	user := repo.User{UserId: userId}
 	err := ah.userRepository.GetUser(&user)
 	if err != nil {
-		http.Error(w, "Failed to Get User", http.StatusInternalServerError)
+		util.JSONMarshaller(w, http.StatusInternalServerError, err)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(user)
+	util.JSONMarshaller(w, http.StatusOK, user)
 }
 
 func SetJWTCookie(w *http.ResponseWriter, user *repo.User) error {

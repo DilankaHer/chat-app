@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useApi, type ApiRequest } from "./utils/apiRequest";
 
 function Room({ roomId, roomName, userId, setRoomId }: { roomId: string, roomName: string, userId: string, setRoomId: (roomId: string) => void }) {
+  const { apiRequest } = useApi();
   const [text, setText] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
@@ -20,18 +22,13 @@ function Room({ roomId, roomName, userId, setRoomId }: { roomId: string, roomNam
 
     ws.onopen = () => {
       console.log("WebSocket open for room", roomId);
-      try {
-        fetch(`http://localhost:8080/messages?roomId=${roomId}`)
-          .then(response => response.json())
-          .then(data => {
-            console.log("Fetched messages:", data)
-            if (data != null) {
-              setMessages(data)
-            }
-          })
-      } catch (error) {
-        console.error("Error fetching messages:", error)
-      }
+      const req: ApiRequest = {url: `http://localhost:8080/messages?roomId=${roomId}`, method: "GET"}
+      apiRequest(req).then(response => {
+        setMessages(response.data);
+      })
+        .catch(error => {
+          console.error("Error fetching messages:", error)
+        })
     }
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data)
