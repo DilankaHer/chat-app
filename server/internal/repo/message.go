@@ -44,7 +44,7 @@ func (mr *MessageRepo) AddMessasge(message *Message) error {
 
 func (mr *MessageRepo) GetMessagesByRoomId(roomId string) ([]Message, error) {
 	query := `SELECT m.id, m.room_id, m.user_id, m.content, u.username FROM messages AS m
-	          INNER JOIN users AS u ON u.id = m.user_id WHERE m.room_id = $1`
+	          INNER JOIN users AS u ON u.id = m.user_id WHERE m.room_id = $1 ORDER BY m.created_at ASC`
 
 	rows, err := mr.db.Query(query, roomId)
 	if err != nil {

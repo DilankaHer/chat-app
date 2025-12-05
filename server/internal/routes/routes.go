@@ -14,7 +14,7 @@ func SetupRoutes(loginHandler *auth.AuthHandler, joinRoomHandler *room.RoomHandl
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173", "http://localhost:8080", "http://127.0.0.1:8080", "https://yappr.chat", "http://yappr.chat"},
+		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173", "https://yappr.chat", "http://yappr.chat"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -31,7 +31,7 @@ func SetupRoutes(loginHandler *auth.AuthHandler, joinRoomHandler *room.RoomHandl
 	// private routes (WITH JWT middleware)
 	r.Group(func(pr chi.Router) {
 		pr.Use(middleware.JWTAuth)
-		pr.Get("/joinRoom", middleware.StandardResponse(joinRoomHandler.JoinRoom))
+		pr.Get("/joinRoom", joinRoomHandler.JoinRoom)
 		pr.Get("/me", middleware.StandardResponse(loginHandler.GetMe))
 		pr.Post("/createRoom", middleware.StandardResponse(joinRoomHandler.CreateRoom))
 		// add more protected routes here

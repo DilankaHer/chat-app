@@ -51,6 +51,12 @@
     "editor.tabSize": 2,
     "editor.insertSpaces": true
   },
+  "[jsx]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
 
   // -------------------
   // CSS settings

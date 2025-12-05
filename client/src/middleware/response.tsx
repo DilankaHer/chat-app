@@ -1,3 +1,0 @@
-function ResponseHandler(request: Request) {
-    
-}

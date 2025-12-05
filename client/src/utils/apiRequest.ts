@@ -1,33 +1,43 @@
-import { useDialog } from "./appDialog";
-
-type dataType = {
-    data: any;
-}
+import { useDialog } from './appDialog';
 
 export interface ApiRequest {
-    url: string;
-    method: string;
-    body?: any;
+  url: string;
+  method: string;
+  body?: any;
+  fn?: () => void;
+  dialogType?: 'dialog' | 'toast';
+}
+
+export interface ApiResponse {
+  data: any;
+  message: string;
+  error: string;
 }
 
 export function useApi() {
-    const { showDialog } = useDialog();
-    async function apiRequest(req: ApiRequest, fn?: () => void): Promise<dataType> {
-    const response = await fetch(req.url, {
+  const { showDialog } = useDialog();
+  async function apiRequest<T>(req: ApiRequest): Promise<T> {
+    try {
+      const response = await fetch(req.url, {
         method: req.method,
         headers: {
-            "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        credentials: "include",
+        credentials: 'include',
         body: JSON.stringify(req.body),
-    });
-    const data = await response.json().then((data) => data?.data).catch((error) => error);
-    if (response.status !== 200) {
-        showDialog(response.status, data, fn);
-        throw new Error(data);
+      });
+      const data: ApiResponse = await response.json();
+      if (response.status !== 200) {
+        if (data.error !== 'missing auth token' && req.dialogType) {
+          showDialog(req.dialogType, data.error, req.fn);
+        }
+        throw new Error(data.error);
+      }
+      return data.data as T;
+    } catch (error) {
+      showDialog('toast', 'Something went wrong', req.fn);
+      throw error;
     }
-    return { data };
+  }
+  return { apiRequest };
 }
-    return { apiRequest };
-}
-

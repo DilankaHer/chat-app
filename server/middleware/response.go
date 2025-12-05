@@ -10,6 +10,7 @@ type ServerResponse struct {
 	Status  int    `json:"status"`
 	Message string `json:"message"`
 	Data    any    `json:"data"`
+	Error   any    `json:"error"`
 }
 
 type ResponseCapture struct {
@@ -36,7 +37,13 @@ func StandardResponse(next http.HandlerFunc) http.HandlerFunc {
 		resp := ServerResponse{
 			Status:  rc.status,
 			Message: http.StatusText(rc.status),
-			Data:    json.RawMessage(rc.body.Bytes()),
+			Data:    nil,
+			Error:   "",
+		}
+		if rc.status != http.StatusOK {
+			resp.Error = json.RawMessage(rc.body.Bytes())
+		} else {
+			resp.Data = json.RawMessage(rc.body.Bytes())
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(rc.status)

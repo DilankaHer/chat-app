@@ -2,6 +2,7 @@ package repo
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
@@ -35,11 +36,11 @@ func (ur *UserRepo) Login(user *User) error {
 	var passwordHash []byte
 	err := ur.db.QueryRow(query, user.EmailUsername).Scan(&user.UserId, &user.Username, &user.Email, &passwordHash)
 	if err != nil {
-		return err
+		return errors.New("User not found")
 	}
 	err = bcrypt.CompareHashAndPassword(passwordHash, []byte(user.Password))
 	if err != nil {
-		return err
+		return errors.New("Invalid password")
 	}
 	return nil
 }

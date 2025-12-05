@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"context"
-	"duhchat/util"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -10,11 +10,16 @@ import (
 )
 
 func JWTAuth(h http.Handler) http.Handler {
-	return StandardResponse(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var jwtKey = []byte("k8f9+2aV3b7XcQpL6eR1yT0uN4wZ5vQ2")
 		cookie, err := r.Cookie("jwt")
 		if err != nil {
-			util.JSONMarshaller(w, http.StatusUnauthorized, "missing auth token")
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(ServerResponse{
+				Status:  http.StatusUnauthorized,
+				Message: http.StatusText(http.StatusUnauthorized),
+				Error:   "missing auth token",
+			})
 			return
 		}
 
@@ -29,7 +34,12 @@ func JWTAuth(h http.Handler) http.Handler {
 			return jwtKey, nil
 		})
 		if err != nil || !token.Valid {
-			util.JSONMarshaller(w, http.StatusUnauthorized, "invalid token")
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(ServerResponse{
+				Status:  http.StatusUnauthorized,
+				Message: http.StatusText(http.StatusUnauthorized),
+				Error:   "invalid token",
+			})
 			return // STOP the chain
 		}
 
@@ -39,5 +49,5 @@ func JWTAuth(h http.Handler) http.Handler {
 
 		// Token OK → call next handler
 		h.ServeHTTP(w, r)
-	}))
+	})
 }
