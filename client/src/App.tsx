@@ -18,6 +18,7 @@ interface User {
 }
 function App() {
   const { apiRequest } = useApi();
+  const baseURL = import.meta.env.VITE_BASE_URL;
   const [loginState, setLoginState] = useState<LoginState>({
     isLoginSuccess: false,
     userId: '',
@@ -31,7 +32,7 @@ function App() {
     e.preventDefault();
     const roomName = text;
     const req: ApiRequest = {
-      url: 'http://localhost:8080/createRoom',
+      url: baseURL + '/createRoom',
       method: 'POST',
       body: { roomName: roomName },
     };
@@ -48,7 +49,7 @@ function App() {
   useEffect(() => {
     if (loginState.isLoginSuccess) return;
     const req: ApiRequest = {
-      url: 'http://localhost:8080/me',
+      url: baseURL + '/me',
       method: 'GET',
       dialogType: 'toast',
     };
@@ -68,7 +69,7 @@ function App() {
   useEffect(() => {
     if (loginState.isLoginSuccess) {
       const req: ApiRequest = {
-        url: 'http://localhost:8080/rooms',
+        url: baseURL + '/rooms',
         method: 'GET',
       };
       apiRequest<Room[]>(req)
@@ -107,7 +108,7 @@ function App() {
             <div className="flex flex-row justify-center items-center">
               <form
                 onSubmit={handleCreateRoom}
-                className="flex flex-row gap-3 mt-4 px-4 py-2 w-full justify-center mt-10"
+                className="flex flex-row gap-3 px-4 py-2 w-full justify-center mt-10"
               >
                 <input
                   value={text}

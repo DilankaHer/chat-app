@@ -14,7 +14,7 @@ func SetupRoutes(loginHandler *auth.AuthHandler, joinRoomHandler *room.RoomHandl
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173", "https://yappr.chat", "http://yappr.chat"},
+		AllowedOrigins:   []string{"http://localhost:5173", "http://127.0.0.1:5173"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -36,6 +36,13 @@ func SetupRoutes(loginHandler *auth.AuthHandler, joinRoomHandler *room.RoomHandl
 		pr.Post("/createRoom", middleware.StandardResponse(joinRoomHandler.CreateRoom))
 		// add more protected routes here
 	})
+
+	// r.Handle("/assets/*", http.StripPrefix("/", http.FileServer(http.Dir("./static"))))
+
+	// Catch-all to serve index.html for React/Vite SPA
+	// r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+	// 	http.ServeFile(w, r, "./static/index.html")
+	// })
 
 	return r
 }

@@ -18,6 +18,7 @@ function Login({
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [isSignup, setIsSignup] = useState(false);
+  const baseURL = import.meta.env.VITE_BASE_URL;
 
   useEffect(() => {
     console.log(isSignup);
@@ -29,25 +30,27 @@ function Login({
     let req: ApiRequest;
     if (isSignup) {
       const signupData: LoginData = { email, password, username };
-      url = 'http://localhost:8080/signup';
+      url = baseURL + '/signup';
       req = { url, method: 'POST', body: signupData };
     } else {
       const emailUsername = email;
       const loginData: LoginData = { emailUsername, password };
-      url = 'http://localhost:8080/login';
+      url = baseURL + '/login';
+      console.log(url);
       req = { url, method: 'POST', body: loginData };
     }
     req.fn = handleErrorLogin;
     req.dialogType = 'toast';
     apiRequest<{ message: string; userId: string }>(req)
       .then((response) => {
+        console.log(response);
         setLoginState({
           isLoginSuccess: true,
           userId: response.userId,
         });
       })
-      .catch(() => {
-        console.log('error');
+      .catch((error) => {
+        console.log('error', error);
       });
   };
 

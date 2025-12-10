@@ -41,8 +41,6 @@ func main() {
 	messageHandler := message.NewMessageHandler(messageRepo)
 
 	r := routes.SetupRoutes(loginHandler, roomUserHandler, messageHandler)
-	// r.Handle("/images/*", http.StripPrefix("/images/", http.FileServer(http.Dir("images"))))
-	// r.Handle("/css/*", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
 
 	server := &http.Server{
 		Addr:         ":8080",

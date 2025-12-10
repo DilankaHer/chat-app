@@ -17,6 +17,7 @@ export interface ApiResponse {
 export function useApi() {
   const { showDialog } = useDialog();
   async function apiRequest<T>(req: ApiRequest): Promise<T> {
+    let isUnexpectedError = true;
     try {
       const response = await fetch(req.url, {
         method: req.method,
@@ -31,11 +32,14 @@ export function useApi() {
         if (data.error !== 'missing auth token' && req.dialogType) {
           showDialog(req.dialogType, data.error, req.fn);
         }
+        isUnexpectedError = false;
         throw new Error(data.error);
       }
       return data.data as T;
     } catch (error) {
-      showDialog('toast', 'Something went wrong', req.fn);
+      if (isUnexpectedError) {
+        showDialog('toast', 'Something went wrong', req.fn);
+      }
       throw error;
     }
   }

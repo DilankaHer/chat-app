@@ -16,6 +16,7 @@ function Room({
   const [text, setText] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
+  const baseURL = import.meta.env.VITE_BASE_URL;
 
   interface Message {
     roomId: string;
@@ -33,7 +34,7 @@ function Room({
     ws.onopen = () => {
       console.log('WebSocket open for room', roomId);
       const req: ApiRequest = {
-        url: `http://localhost:8080/messages?roomId=${roomId}`,
+        url: baseURL + `/messages?roomId=${roomId}`,
         method: 'GET',
       };
       apiRequest<Message[]>(req)

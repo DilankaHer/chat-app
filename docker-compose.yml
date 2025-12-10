@@ -1,0 +1,31 @@
+services:
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: client
+    ports:
+      - 80:80
+    restart: unless-stopped
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: server
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+    restart: unless-stopped
+  db:
+    image: postgres
+    container_name: postgres
+    environment:
+      POSTGRES_DB: mydatabase
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+    ports:
+      - 5432:5432
+    volumes:
+      - ./server/database/postgres-data:/var/lib/postgresql
+    restart: unless-stopped
