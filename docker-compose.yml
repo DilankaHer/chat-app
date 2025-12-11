@@ -5,15 +5,13 @@ services:
       dockerfile: Dockerfile
     container_name: client
     ports:
-      - 80:80
+      - 8081:80
     restart: unless-stopped
   server:
     build:
       context: ./server
       dockerfile: Dockerfile
     container_name: server
-    ports:
-      - 8080:8080
     depends_on:
       - db
     restart: unless-stopped

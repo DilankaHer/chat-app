@@ -18,7 +18,6 @@ function Login({
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
   const [isSignup, setIsSignup] = useState(false);
-  const baseURL = import.meta.env.VITE_BASE_URL;
 
   useEffect(() => {
     console.log(isSignup);
@@ -30,12 +29,12 @@ function Login({
     let req: ApiRequest;
     if (isSignup) {
       const signupData: LoginData = { email, password, username };
-      url = baseURL + '/signup';
+      url = '/signup';
       req = { url, method: 'POST', body: signupData };
     } else {
       const emailUsername = email;
       const loginData: LoginData = { emailUsername, password };
-      url = baseURL + '/login';
+      url = '/login';
       console.log(url);
       req = { url, method: 'POST', body: loginData };
     }

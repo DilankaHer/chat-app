@@ -18,7 +18,6 @@ interface User {
 }
 function App() {
   const { apiRequest } = useApi();
-  const baseURL = import.meta.env.VITE_BASE_URL;
   const [loginState, setLoginState] = useState<LoginState>({
     isLoginSuccess: false,
     userId: '',
@@ -32,7 +31,7 @@ function App() {
     e.preventDefault();
     const roomName = text;
     const req: ApiRequest = {
-      url: baseURL + '/createRoom',
+      url: '/createRoom',
       method: 'POST',
       body: { roomName: roomName },
     };
@@ -47,9 +46,10 @@ function App() {
   };
 
   useEffect(() => {
+    console.log("Environment", import.meta.env[import.meta.env.MODE]);
     if (loginState.isLoginSuccess) return;
     const req: ApiRequest = {
-      url: baseURL + '/me',
+      url: '/me',
       method: 'GET',
       dialogType: 'toast',
     };
@@ -69,7 +69,7 @@ function App() {
   useEffect(() => {
     if (loginState.isLoginSuccess) {
       const req: ApiRequest = {
-        url: baseURL + '/rooms',
+        url: '/rooms',
         method: 'GET',
       };
       apiRequest<Room[]>(req)

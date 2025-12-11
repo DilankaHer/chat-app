@@ -16,10 +16,11 @@ export interface ApiResponse {
 
 export function useApi() {
   const { showDialog } = useDialog();
+  const baseURL = import.meta.env.VITE_BASE_URL;
   async function apiRequest<T>(req: ApiRequest): Promise<T> {
     let isUnexpectedError = true;
     try {
-      const response = await fetch(req.url, {
+      const response = await fetch(baseURL + req.url, {
         method: req.method,
         headers: {
           'Content-Type': 'application/json',
