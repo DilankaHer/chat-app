@@ -12,6 +12,9 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Debug Secret
+      run: echo "${{ secrets.SERVER_IP }}"
+
     # Step 1: Deploy to server via SSH
     - name: Deploy to server
       uses: appleboy/ssh-action@v1
