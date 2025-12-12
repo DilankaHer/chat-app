@@ -11,10 +11,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-
-    - name: Debug Secret
-      run: echo "Length:${{ secrets.SERVER_SSH_KEY }}"
-
+      
     # Step 1: Deploy to server via SSH
     - name: Deploy to server
       uses: appleboy/ssh-action@v1
