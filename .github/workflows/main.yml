@@ -25,4 +25,5 @@ jobs:
           git checkout main
           git pull --rebase https://${{ github.actor }}:${{ secrets.GHCR_PAT }}@github.com/DilankaHer/chat-app.git
           docker compose down
+          docker rmi chat-app-client:latest
           docker compose up -d
