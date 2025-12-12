@@ -1,0 +1,27 @@
+name: CI/CD Deploy Chat-App
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    # Step 1: Deploy to server via SSH
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v1
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        script: |
+          cd /home/dilanka/chat-app
+          git fetch https://${{ github.actor }}:${{ secrets.GHCR_PAT }}@github.com/DilankaHer/chat-app.git main
+          git checkout main
+          docker compose down
+          docker compose up -d
