@@ -114,7 +114,7 @@ function Room({
       </div>
       <div className="flex flex-col-reverse gap-4 overflow-y-auto">
         <ul className="list-none space-y-2 w-full px-150 mt-10 mb-5">
-          {messages.map((msg, idx) => (
+          {messages && messages.length > 0 && messages.map((msg, idx) => (
             <li
               key={idx}
               className={`
