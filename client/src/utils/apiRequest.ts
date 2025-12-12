@@ -17,7 +17,7 @@ export interface ApiResponse {
 export function useApi() {
   const { showDialog } = useDialog();
   const baseURL = import.meta.env.VITE_BASE_URL;
-  async function apiRequest<T>(req: ApiRequest): Promise<T> {
+  async function apiRequest<T>(req: ApiRequest, ifNull?: T): Promise<T> {
     let isUnexpectedError = true;
     try {
       const response = await fetch(baseURL + req.url, {
@@ -36,7 +36,7 @@ export function useApi() {
         isUnexpectedError = false;
         throw new Error(data.error);
       }
-      return data.data as T;
+      return data.data == null && ifNull !== undefined ? ifNull as T: data.data as T;
     } catch (error) {
       if (isUnexpectedError) {
         showDialog('toast', 'Something went wrong', req.fn);

@@ -36,7 +36,7 @@ function Room({
         url: `/messages?roomId=${roomId}`,
         method: 'GET',
       };
-      apiRequest<Message[]>(req)
+      apiRequest<Message[]>(req, [])
         .then((response) => {
           setMessages(response);
         })
