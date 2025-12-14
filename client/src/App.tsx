@@ -46,7 +46,7 @@ function App() {
   };
 
   useEffect(() => {
-    console.log("Environment", import.meta.env[import.meta.env.MODE]);
+    console.log('Environment', import.meta.env.MODE);
     if (loginState.isLoginSuccess) return;
     const req: ApiRequest = {
       url: '/me',

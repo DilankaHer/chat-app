@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 FROM golang:1.25-alpine AS go_builder
 
-WORKDIR /app/server
+WORKDIR /app
 
 # Cache dependencies
 COPY go.mod go.sum ./
@@ -24,6 +24,7 @@ WORKDIR /app
 
 # Copy binary and required files
 COPY --from=go_builder /app/server_bin ./server
+COPY --from=go_builder /app/config ./config
 
 EXPOSE 8080
 

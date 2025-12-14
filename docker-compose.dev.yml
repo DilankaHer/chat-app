@@ -3,7 +3,7 @@ services:
     build:
       context: ./client
       args:
-        - VITE_MODE=production
+        - VITE_MODE=development
       dockerfile: Dockerfile
     container_name: client
     ports:
@@ -15,7 +15,7 @@ services:
       dockerfile: Dockerfile
     container_name: server
     environment:
-      - APP_ENV=production
+      - APP_ENV=development
     depends_on:
       - db
     restart: unless-stopped

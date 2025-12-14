@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	migration "duhchat/internal/db/migrations"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -24,8 +25,15 @@ func ConnectDB() (*sql.DB, error) {
 	env := os.Getenv("APP_ENV")
 	fileName := ""
 
-	if env == "local" || env == "" {
+	switch env {
+	case "local", "":
 		fileName = "config/.env.local.json"
+	case "development":
+		fileName = "config/.env.dev.json"
+	case "production":
+		fileName = "config/.env.prod.json"
+	default:
+		return nil, errors.New("Invalid app environment")
 	}
 
 	file, err := os.ReadFile(fileName)
