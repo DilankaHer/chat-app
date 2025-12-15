@@ -22,8 +22,6 @@ jobs:
         script: |
           cd /home/dilanka/chat-app
           git fetch https://${{ github.actor }}:${{ secrets.GHCR_PAT }}@github.com/DilankaHer/chat-app.git main
-          git checkout main
-          git pull --rebase https://${{ github.actor }}:${{ secrets.GHCR_PAT }}@github.com/DilankaHer/chat-app.git
+          git pull https://${{ github.actor }}:${{ secrets.GHCR_PAT }}@github.com/DilankaHer/chat-app.git
           docker compose down
-          docker rmi chat-app-client:latest
-          docker compose up -d
+          docker compose up --build --force-recreate -d
