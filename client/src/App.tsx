@@ -37,7 +37,6 @@ function App() {
     };
     apiRequest<Room>(req)
       .then((response) => {
-        console.log(response);
         setRooms([...rooms, response]);
       })
       .catch(() => {
@@ -46,7 +45,6 @@ function App() {
   };
 
   useEffect(() => {
-    console.log('Environment', import.meta.env.MODE);
     if (loginState.isLoginSuccess) return;
     const req: ApiRequest = {
       url: '/me',
@@ -55,14 +53,12 @@ function App() {
     };
     apiRequest<User>(req)
       .then((response) => {
-        console.log(response, response.userId);
         setLoginState({ isLoginSuccess: true, userId: response.userId });
         setIsLoading(false);
       })
       .catch(() => {
         setLoginState({ isLoginSuccess: false, userId: '' });
         setIsLoading(false);
-        console.log('error');
       });
   }, [loginState.isLoginSuccess]);
 
@@ -74,7 +70,6 @@ function App() {
       };
       apiRequest<Room[]>(req)
         .then((response) => {
-          console.log(response);
           setRooms(response);
         })
         .catch(() => {
@@ -82,12 +77,6 @@ function App() {
         });
     }
   }, [loginState.isLoginSuccess]);
-
-  // const handleError = () => {
-  //   console.log("error");
-  //   setLoginState({isLoginSuccess: false, userId: ""});
-  //   setIsLoading(false);
-  // }
 
   return (
     <div className="flex flex-col gap-3 h-screen overflow-hidden">
