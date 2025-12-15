@@ -46,13 +46,6 @@ func ConnectToRoom(room Room, userId string, username string, messageRepository 
 
 	room.register <- user
 
-	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-	conn.SetPongHandler(func(string) error {
-		fmt.Println("pong received")
-		conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-		return nil
-	})
-
 	go user.writePump()
 	go user.readPump(messageRepository)
 	go user.ping()
@@ -109,7 +102,7 @@ func (c *User) writePump() {
 }
 
 func (c *User) ping() {
-	ticker := time.NewTicker(5 * time.Second)
+	ticker := time.NewTicker(55 * time.Second)
 	defer ticker.Stop()
 
 	for range ticker.C {
