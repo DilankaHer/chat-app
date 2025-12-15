@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -45,8 +46,16 @@ func ConnectToRoom(room Room, userId string, username string, messageRepository 
 
 	room.register <- user
 
+	conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+	conn.SetPongHandler(func(string) error {
+		fmt.Println("pong received")
+		conn.SetReadDeadline(time.Now().Add(10 * time.Second))
+		return nil
+	})
+
 	go user.writePump()
 	go user.readPump(messageRepository)
+	go user.ping()
 
 	return nil
 }
@@ -96,5 +105,18 @@ func (c *User) writePump() {
 			return
 		}
 		c.conn.WriteMessage(websocket.TextMessage, msg)
+	}
+}
+
+func (c *User) ping() {
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		fmt.Println("ping executed")
+		if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+			fmt.Println("ping error", err)
+			return
+		}
 	}
 }

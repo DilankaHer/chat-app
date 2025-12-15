@@ -26,7 +26,7 @@ function Room({
   }
 
   useEffect(() => {
-    console.log('UserID', userId);
+    if (wsRef.current) return;
     const ws = new WebSocket(`${import.meta.env.VITE_BASE_URL_WS}/joinRoom?roomId=${roomId}`);
     wsRef.current = ws;
 
