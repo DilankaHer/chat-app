@@ -63,7 +63,7 @@ func (ah *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = SetJWTCookie(&w, &user)
+	err = SetJWTCookie(&w, &user, false)
 	if err != nil {
 		http.Error(w, "SignUp Failed at Set JWT Cookie", http.StatusInternalServerError)
 		return
@@ -106,7 +106,7 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = SetJWTCookie(&w, &user)
+	err = SetJWTCookie(&w, &user, false)
 	if err != nil {
 		util.JSONMarshaller(w, http.StatusInternalServerError, err.Error())
 		return
@@ -131,14 +131,30 @@ func (ah *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	util.JSONMarshaller(w, http.StatusOK, user)
 }
 
-func SetJWTCookie(w *http.ResponseWriter, user *repo.User) error {
-	tokenString, err := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"username": user.Username,
-		"email":    user.Email,
-		"userId":   user.UserId,
-	}).SignedString([]byte("k8f9+2aV3b7XcQpL6eR1yT0uN4wZ5vQ2"))
+func (ah *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+	err := SetJWTCookie(&w, nil, true)
 	if err != nil {
-		return err
+		util.JSONMarshaller(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	util.JSONMarshaller(w, http.StatusOK, "Logout Successful")
+}
+
+func SetJWTCookie(w *http.ResponseWriter, user *repo.User, isLogout bool) error {
+	var tokenString = ""
+	var maxAge = -1
+	var err error
+
+	if !isLogout {
+		maxAge = 60 * 60 * 24 * 2
+		tokenString, err = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+			"username": user.Username,
+			"email":    user.Email,
+			"userId":   user.UserId,
+		}).SignedString([]byte("k8f9+2aV3b7XcQpL6eR1yT0uN4wZ5vQ2"))
+		if err != nil {
+			return err
+		}
 	}
 
 	http.SetCookie(*w, &http.Cookie{
@@ -147,6 +163,7 @@ func SetJWTCookie(w *http.ResponseWriter, user *repo.User) error {
 		Path:     "/",
 		HttpOnly: true,
 		Secure:   false, // set to true in production (HTTPS only)
+		MaxAge:   maxAge,
 		SameSite: http.SameSiteLaxMode,
 	})
 	return nil

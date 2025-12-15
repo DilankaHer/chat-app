@@ -78,6 +78,23 @@ function App() {
     }
   }, [loginState.isLoginSuccess]);
 
+  const handleLogout = () => {
+    const req: ApiRequest = {
+      url: '/logout',
+      method: 'POST',
+      dialogType: 'toast',
+    };
+    apiRequest<void>(req)
+      .then(() => {
+        setLoginState({ isLoginSuccess: false, userId: '' });
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setLoginState({ isLoginSuccess: false, userId: '' });
+        setIsLoading(false);
+      });
+  };
+
   return (
     <div className="flex flex-col gap-3 h-screen overflow-hidden">
       {isLoading ? (
@@ -88,6 +105,10 @@ function App() {
         <Login setLoginState={setLoginState} />
       ) : (
         <Fragment>
+          <div className='text-end'>
+            <button className="text-xl items-center gap-2 rounded-2xl px-4 py-2 font-medium shadow-sm transition bg-linear-to-b from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
+             onClick={handleLogout}>Logout</button>
+          </div>
           <div className="flex justify-center">
             <span className="text-2xl lg:text-5xl font-mono mt-10">
               Chat App - Room Based WebSocket Demo

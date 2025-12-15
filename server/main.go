@@ -8,6 +8,7 @@ import (
 	"duhchat/internal/repo"
 	"duhchat/internal/routes"
 	"duhchat/internal/ws"
+	"duhchat/util"
 	"fmt"
 	"net/http"
 	"time"
@@ -23,7 +24,12 @@ func main() {
 	// 	panic(err)
 	// }
 
-	db, err := db.ConnectDB()
+	config, err := util.GetAppConfig()
+	if err != nil {
+		panic(err)
+	}
+
+	db, err := db.ConnectDB(config)
 	if err != nil {
 		panic(err)
 	}
@@ -40,7 +46,7 @@ func main() {
 	roomUserHandler := room.NewRoomHandler(roomRepo, messageRepo, hub)
 	messageHandler := message.NewMessageHandler(messageRepo)
 
-	r := routes.SetupRoutes(loginHandler, roomUserHandler, messageHandler)
+	r := routes.SetupRoutes(loginHandler, roomUserHandler, messageHandler, config)
 
 	server := &http.Server{
 		Addr:         ":8080",

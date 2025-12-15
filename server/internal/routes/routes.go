@@ -5,12 +5,13 @@ import (
 	"duhchat/internal/api/handler/message"
 	room "duhchat/internal/api/handler/room"
 	"duhchat/middleware"
+	"duhchat/util"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 )
 
-func SetupRoutes(loginHandler *auth.AuthHandler, joinRoomHandler *room.RoomHandler, messageHandler *message.MessageHandler) *chi.Mux {
+func SetupRoutes(loginHandler *auth.AuthHandler, joinRoomHandler *room.RoomHandler, messageHandler *message.MessageHandler, config *util.AppConfig) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.Use(cors.Handler(cors.Options{
@@ -30,10 +31,11 @@ func SetupRoutes(loginHandler *auth.AuthHandler, joinRoomHandler *room.RoomHandl
 
 	// private routes (WITH JWT middleware)
 	r.Group(func(pr chi.Router) {
-		pr.Use(middleware.JWTAuth)
+		pr.Use(middleware.JWTAuth(config.JWTSecret))
 		pr.Get("/joinRoom", joinRoomHandler.JoinRoom)
 		pr.Get("/me", middleware.StandardResponse(loginHandler.GetMe))
 		pr.Post("/createRoom", middleware.StandardResponse(joinRoomHandler.CreateRoom))
+		pr.Post("/logout", middleware.StandardResponse(loginHandler.Logout))
 		// add more protected routes here
 	})
 
