@@ -24,4 +24,4 @@ jobs:
           git fetch https://${{ github.actor }}:${{ secrets.GHCR_PAT }}@github.com/DilankaHer/chat-app.git main
           git pull https://${{ github.actor }}:${{ secrets.GHCR_PAT }}@github.com/DilankaHer/chat-app.git
           docker compose down
-          docker compose build --no-cache up -d
+          docker compose up --build --force-recreate -d
