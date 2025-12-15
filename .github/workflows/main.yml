@@ -25,5 +25,4 @@ jobs:
           git pull https://${{ github.actor }}:${{ secrets.GHCR_PAT }}@github.com/DilankaHer/chat-app.git
           docker compose down
           docker rmi chat-app-client:latest
-          docker rmi chat-app-server:latest
           docker compose up -d
