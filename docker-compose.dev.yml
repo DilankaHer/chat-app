@@ -1,24 +1,4 @@
 services:
-  client:
-    build:
-      context: ./client
-      args:
-        - VITE_MODE=development
-      dockerfile: Dockerfile
-    container_name: client
-    ports:
-      - 8081:80
-    restart: unless-stopped
-  server:
-    build:
-      context: ./server
-      dockerfile: Dockerfile
-    container_name: server
-    environment:
-      - APP_ENV=development
-    depends_on:
-      - db
-    restart: unless-stopped
   db:
     image: postgres
     container_name: postgres
@@ -31,3 +11,27 @@ services:
     volumes:
       - ./server/database/postgres-data:/var/lib/postgresql
     restart: unless-stopped
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: server
+    environment:
+      - APP_ENV=development
+    depends_on:
+      - db
+    restart: unless-stopped
+  client:
+    build:
+      context: ./client
+      args:
+        - VITE_MODE=development
+      dockerfile: Dockerfile
+    container_name: client
+    depends_on:
+      - server
+    ports:
+      - 8081:80
+    restart: unless-stopped
+
+
