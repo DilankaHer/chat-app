@@ -3,7 +3,6 @@ package ws
 import (
 	"duhchat/internal/repo"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -41,8 +40,6 @@ func ConnectToRoom(room Room, userId string, username string, messageRepository 
 		userId:   userId,
 		username: username,
 	}
-
-	fmt.Printf("User Created %s\n", user.userId)
 
 	room.register <- user
 
@@ -94,7 +91,6 @@ func (c *User) writePump() {
 	for {
 		msg, ok := <-c.send
 		if !ok {
-			fmt.Println("Channel closed, closing connection")
 			return
 		}
 		c.conn.WriteMessage(websocket.TextMessage, msg)
@@ -106,9 +102,7 @@ func (c *User) ping() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		fmt.Println("ping executed")
 		if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-			fmt.Println("ping error", err)
 			return
 		}
 	}
