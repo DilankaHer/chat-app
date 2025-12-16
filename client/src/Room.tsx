@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useApi, type ApiRequest } from './utils/apiRequest';
 
 function Room({
@@ -16,6 +16,7 @@ function Room({
   const [text, setText] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   interface Message {
     roomId: string;
@@ -54,6 +55,10 @@ function Room({
     return () => ws.close();
   }, [roomId]); // important: re-connect when room changes
 
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (wsRef.current?.readyState === WebSocket.OPEN) {
@@ -68,24 +73,23 @@ function Room({
   };
 
   return (
-    <Fragment>
-      <div className="flex flex-col gap-4 justify-center items-center">
-        <div className="flex flex-row gap-3 items-center mt-10">
+    <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex flex-col gap-4 items-center">
+        <div className="flex flex-row gap-3 items-center mt-4">
           <button
-            className="text-xl items-center gap-2 rounded-2xl px-4 py-2 font-medium shadow-sm transition bg-linear-to-b from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="items-center gap-2 rounded-2xl md:px-4 md:py-2 px-2 py-1 font-medium shadow-sm transition bg-linear-to-b from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
             type="button"
             onClick={handleExitRoom}
           >
             Exit Room
           </button>
-          <h1 className="lg:text-3xl md:text-2xl text-xl">Connected to Room {roomName}</h1>
+          <h1>Connected to Room {roomName}</h1>
         </div>
-        <hr className="my-8 h-px bg-neutral-100 dark:bg-neutral-700 border-0 w-full" />
-        {/* <h1 className="text-5xl underline"> Messages </h1> */}
+      <hr className="my-8 h-px bg-neutral-100 dark:bg-neutral-700 border-0 w-full" />
       </div>
-      <div className="flex flex-col-reverse gap-4 overflow-x-hidden overflow-y-auto lg:text-xl md:text-lg text-base mx-2">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-2">
         <ul className="list-none space-y-2 w-full sm:px-25 md:px-50 lg:px-65 xl:px-100 2xl:px-125 mb-5">
-          {messages && messages.length > 0 && messages.map((msg, idx) => (
+          {messages.map((msg, idx) => (
             <li
               key={idx}
               className={`
@@ -115,12 +119,10 @@ function Room({
             </li>
           ))}
         </ul>
+        <div ref={messagesEndRef} />
       </div>
-      <div className='block bg-gray-700 w-full py-4 px-2'>
-        <form
-          className="flex flex-row gap-3 mb-1"
-          onSubmit={handleSubmit}
-        >
+      <div className="bg-gray-700 w-full px-2 py-3">
+        <form className="flex items-center gap-3" onSubmit={handleSubmit}>
           <textarea
             rows={1}
             value={text}
@@ -142,7 +144,6 @@ function Room({
             type="submit"
             className="
               px-4 py-2
-              text-base
               leading-normal
               rounded-2xl
               font-medium
@@ -155,7 +156,7 @@ function Room({
           </button>
         </form>
       </div>
-    </Fragment>
+    </div>
   );
 }
 
