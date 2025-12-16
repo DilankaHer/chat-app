@@ -157,9 +157,6 @@ function App() {
           {roomId !== '' && (
             <Room
               roomId={roomId}
-              roomName={
-                rooms.find((room) => room.roomId === roomId)?.name || ''
-              }
               userId={loginState.userId}
               setRoomId={setRoomId}
             />

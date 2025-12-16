@@ -3,12 +3,10 @@ import { useApi, type ApiRequest } from './utils/apiRequest';
 
 function Room({
   roomId,
-  roomName,
   userId,
   setRoomId,
 }: {
   roomId: string;
-  roomName: string;
   userId: string;
   setRoomId: (roomId: string) => void;
 }) {
