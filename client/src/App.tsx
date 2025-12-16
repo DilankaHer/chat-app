@@ -110,9 +110,15 @@ function App() {
              onClick={handleLogout}>Logout</button>
           </div>
           <div className="flex justify-center text-center">
-            <span className="lg:text-4xl md:text-3xl text-xl font-mono">
-              Chat App - Room Based WebSocket Demo
-            </span>
+            {roomId !== '' ? (
+              <span className="lg:text-4xl md:text-3xl text-xl font-bold">
+                Connected to {rooms.find((room) => room.roomId === roomId)?.name || ''}
+              </span>
+            ) : (
+              <span className="lg:text-4xl md:text-3xl text-xl font-mono">
+                Chat App - Room Based WebSocket Demo
+              </span>
+            )}
           </div>
           {roomId === '' && (
             <div className="flex flex-row sm:flex-col justify-center items-center">

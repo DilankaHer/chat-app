@@ -83,7 +83,6 @@ function Room({
           >
             Exit Room
           </button>
-          <h1>Connected to Room {roomName}</h1>
         </div>
       <hr className="my-8 h-px bg-neutral-100 dark:bg-neutral-700 border-0 w-full" />
       </div>
