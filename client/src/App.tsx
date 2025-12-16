@@ -96,7 +96,7 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col gap-3 h-screen overflow-hidden">
+    <div className="flex flex-col gap-3 h-screen overflow-hidden lg:text-xl md:text-lg text-base">
       {isLoading ? (
         <div className="flex justify-center items-center py-10">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent"></div>
@@ -106,44 +106,45 @@ function App() {
       ) : (
         <Fragment>
           <div className='text-end'>
-            <button className="text-xl items-center gap-2 rounded-2xl px-4 py-2 font-medium shadow-sm transition bg-linear-to-b from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            <button className="items-center rounded-2xl px-4 py-2 m-2 font-medium shadow-sm transition bg-linear-to-b from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
              onClick={handleLogout}>Logout</button>
           </div>
-          <div className="flex justify-center">
-            <span className="text-2xl lg:text-5xl font-mono mt-10">
+          <div className="flex justify-center text-center">
+            <span className="lg:text-4xl md:text-3xl text-xl font-mono">
               Chat App - Room Based WebSocket Demo
             </span>
           </div>
           {roomId === '' && (
-            <div className="flex flex-row justify-center items-center">
+            <div className="flex flex-row sm:flex-col justify-center items-center">
               <form
                 onSubmit={handleCreateRoom}
-                className="flex flex-row gap-3 px-4 py-2 w-full justify-center mt-10"
+                className="flex md:flex-row flex-col gap-3 px-4 py-2 w-full justify-center mt-10"
               >
                 <input
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   placeholder="Room Name"
                   className="
-              w-full max-w-md
-              text-xl
-              px-4 py-2
-              rounded-xl
-              bg-blue-800 dark:bg-white
-              placeholder-gray-400 dark:placeholder-gray-500
-              shadow-sm
-              border border-blue-800 dark:ring-red-900
-              focus:outline-none
-              focus:ring-2 focus:ring-blue-300 dark:focus:ring-red-900 dark:focus:bg-blue-700
-              transition
-            "
+                    w-full max-w-md
+                    px-4 py-2
+                    rounded-xl
+                    bg-blue-800 dark:bg-white
+                    placeholder-gray-400 dark:placeholder-gray-500
+                    shadow-sm
+                    border border-blue-800 dark:ring-red-900
+                    focus:outline-none
+                    focus:ring-2 focus:ring-blue-300 dark:focus:ring-red-900 dark:focus:bg-blue-700
+                    transition
+                  "
                 />
-                <button
-                  type="submit"
-                  className="text-xl items-center gap-2 rounded-2xl px-4 py-2 font-medium shadow-sm transition bg-linear-to-b from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Create Room
-                </button>
+                <div className="text-center">
+                  <button
+                    type="submit"
+                    className="w-fit rounded-2xl px-4 py-2 font-medium shadow-sm transition bg-linear-to-b from-green-600 to-green-500 hover:from-green-800 hover:to-green-800 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Create Room
+                  </button>
+                </div>
               </form>
             </div>
           )}
@@ -158,11 +159,18 @@ function App() {
             />
           )}
           {rooms.length > 0 && roomId === '' && (
-            <div className="flex flex-row justify-center items-center p-4 gap-10 mt-20">
+            <div className="flex flex-wrap justify-center items-center p-4 gap-4 mt-10">
               {rooms.map((room) => (
                 <button
                   key={room.roomId}
-                  className="text-2xl items-center gap-2 rounded-2xl px-20 py-10 font-medium shadow-sm transition bg-linear-to-b from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="
+                    w-fit
+                    px-6 py-4 sm:px-10 sm:py-5
+                    rounded-2xl
+                    font-medium
+                    shadow-sm
+                    bg-linear-to-b from-indigo-600 to-indigo-500
+                  "
                   onClick={() => setRoomId(room.roomId)}
                 >
                   {room.name}

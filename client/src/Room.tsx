@@ -78,52 +78,25 @@ function Room({
           >
             Exit Room
           </button>
-          <h1 className="text-5xl">Connected to Room {roomName}</h1>
+          <h1 className="lg:text-3xl md:text-2xl text-xl">Connected to Room {roomName}</h1>
         </div>
-        <form
-          className="flex flex-row gap-3 mt-4 px-4 py-2"
-          onSubmit={handleSubmit}
-        >
-          <input
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Say something..."
-            className="
-              w-full max-w-md
-              text-xl
-              px-4 py-2
-              rounded-xl
-              bg-blue-800 dark:bg-white
-              placeholder-gray-400 dark:placeholder-gray-500
-              shadow-sm
-              border border-blue-800 dark:ring-red-900
-              focus:outline-none
-              focus:ring-2 focus:ring-blue-300 dark:focus:ring-red-900 dark:focus:bg-blue-700
-              transition
-            "
-          />
-          <button
-            className="text-xl items-center gap-2 rounded-2xl px-4 py-2 font-medium shadow-sm transition bg-linear-to-b from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            type="submit"
-          >
-            Send
-          </button>
-        </form>
         <hr className="my-8 h-px bg-neutral-100 dark:bg-neutral-700 border-0 w-full" />
-        <h1 className="text-5xl underline"> Messages </h1>
+        {/* <h1 className="text-5xl underline"> Messages </h1> */}
       </div>
-      <div className="flex flex-col-reverse gap-4 overflow-y-auto">
-        <ul className="list-none space-y-2 w-full sm:px-25 md:px-75 lg:px-150 mt-10 mb-5">
+      <div className="flex flex-col-reverse gap-4 overflow-x-hidden overflow-y-auto lg:text-xl md:text-lg text-base mx-2">
+        <ul className="list-none space-y-2 w-full sm:px-25 md:px-50 lg:px-65 xl:px-100 2xl:px-125 mb-5">
           {messages && messages.length > 0 && messages.map((msg, idx) => (
             <li
               key={idx}
               className={`
-                text-2xl
                 px-4 py-2
                 rounded-xl
                 w-fit
                 max-w-xs
                 flex flex-col
+                whitespace-pre-wrap
+                break-words
+                overflow-wrap-anywhere
                 ${
                   msg.userId === userId
                     ? 'text-pink-500 text-right bg-pink-100 ml-auto'
@@ -142,6 +115,45 @@ function Room({
             </li>
           ))}
         </ul>
+      </div>
+      <div className='block bg-gray-700 w-full py-4 px-2'>
+        <form
+          className="flex flex-row gap-3 mb-1"
+          onSubmit={handleSubmit}
+        >
+          <textarea
+            rows={1}
+            value={text}
+            onChange={(e) => {
+              setText(e.target.value);
+              // e.target.style.height = "auto";
+              // e.target.style.height = e.target.scrollHeight + "px";
+            }}
+            placeholder="Say something..."
+            className="
+              w-full
+              px-4 py-2
+              leading-normal
+              resize-none
+              outline-none
+            "
+          />
+          <button
+            type="submit"
+            className="
+              px-4 py-2
+              text-base
+              leading-normal
+              rounded-2xl
+              font-medium
+              shadow-sm
+              bg-indigo-600 hover:bg-indigo-700
+              mr-4
+            "
+          >
+            Send
+          </button>
+        </form>
       </div>
     </Fragment>
   );
