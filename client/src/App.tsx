@@ -1,4 +1,4 @@
-import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { faRefresh, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Fragment, useEffect, useState } from 'react';
 import Login from './auth/login';
@@ -112,6 +112,20 @@ function App() {
       .catch(() => {});
   };
 
+  const handleRefresh = () => {
+    const req: ApiRequest = {
+      url: '/rooms',
+      method: 'GET',
+    };
+    apiRequest<Room[]>(req)
+      .then((response) => {
+        setRooms(response);
+      })
+      .catch(() => {
+        setRooms([]);
+      });
+  };
+
   return (
     <div className="flex flex-col gap-3 h-screen overflow-hidden lg:text-xl md:text-lg text-base">
       {isLoading ? (
@@ -138,37 +152,53 @@ function App() {
             )}
           </div>
           {roomId === '' && (
-            <div className="flex flex-row sm:flex-col justify-center items-center">
-              <form
-                onSubmit={handleCreateRoom}
-                className="flex md:flex-row flex-col gap-3 px-4 py-2 w-full justify-center mt-10"
-              >
-                <input
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="Room Name"
-                  className="
-                    w-full max-w-md
-                    px-4 py-2
-                    rounded-xl
-                    bg-blue-800 dark:bg-white
-                    placeholder-gray-400 dark:placeholder-gray-500
-                    shadow-sm
-                    border border-blue-800 dark:ring-red-900
-                    focus:outline-none
-                    focus:ring-2 focus:ring-blue-300 dark:focus:ring-red-900 dark:focus:bg-blue-700
-                    transition
-                  "
-                />
-                <div className="text-center">
-                  <button
-                    type="submit"
-                    className="w-fit rounded-2xl px-4 py-2 font-medium shadow-sm transition bg-linear-to-b from-green-600 to-green-500 hover:from-green-800 hover:to-green-800 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Create Room
-                  </button>
-                </div>
-              </form>
+            <div className='flex flex-col gap-3'>
+              <div className="flex flex-row sm:flex-col justify-center items-center">
+                <form
+                  onSubmit={handleCreateRoom}
+                  className="flex md:flex-row flex-col gap-3 px-4 py-2 w-full justify-center mt-10"
+                >
+                  <input
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder="Room Name"
+                    className="
+                      w-full max-w-md
+                      px-4 py-2
+                      rounded-xl
+                      bg-blue-800 dark:bg-white
+                      placeholder-gray-400 dark:placeholder-gray-500
+                      shadow-sm
+                      border border-blue-800 dark:ring-red-900
+                      focus:outline-none
+                      focus:ring-2 focus:ring-blue-300 dark:focus:ring-red-900 dark:focus:bg-blue-700
+                      transition
+                    "
+                  />
+                  <div className="text-center">
+                    <button
+                      type="submit"
+                      className="w-fit rounded-2xl px-4 py-2 font-medium shadow-sm transition bg-linear-to-b from-green-600 to-green-500 hover:from-green-800 hover:to-green-800 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Create Room
+                    </button>
+                  </div>
+                </form>
+              </div>
+              <div className="text-center cursor-pointer">
+                <button
+                  className="w-fit rounded-2xl px-4 py-2 font-medium shadow-sm transition bg-linear-to-b from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-700 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={handleRefresh}
+                >
+                  Refresh Rooms
+                  <FontAwesomeIcon
+                    icon={faRefresh}
+                    fill="currentColor"
+                    className='ml-2'
+                  />
+                </button>
+
+              </div>
             </div>
           )}
           {roomId !== '' && (
@@ -179,7 +209,7 @@ function App() {
             />
           )}
           {rooms.length > 0 && roomId === '' && (
-              <div className="flex flex-wrap justify-center items-center p-4 gap-4 mt-7">
+              <div className="flex flex-wrap justify-center items-center p-4 gap-4 mt-5">
                 {rooms.map((room) => (
                   <div key={room.roomId} className="flex flex-col gap-1 items-stretch">
                       <div className={`${room.createdBy !== loginState.userId && 'invisible disabled'}  flex items-center justify-center text-white xl:text-xl lg:text-lg md:text-base text-xs rounded-xl p-1 shadow-sm bg-linear-to-b from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -197,7 +227,7 @@ function App() {
                       rounded-2xl
                       font-medium
                       shadow-sm
-                      bg-linear-to-b from-indigo-600 to-indigo-500
+                      bg-linear-to-b from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:opacity-50 disabled:cursor-not-allowed
                     "
                     onClick={() => setRoomId(room.roomId)}
                   >
