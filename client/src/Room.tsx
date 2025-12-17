@@ -30,7 +30,6 @@ function Room({
     wsRef.current = ws;
 
     ws.onopen = () => {
-      console.log('WebSocket open for room', roomId);
       const req: ApiRequest = {
         url: `/messages?roomId=${roomId}`,
         method: 'GET',
@@ -39,16 +38,17 @@ function Room({
         .then((response) => {
           setMessages(response);
         })
-        .catch((error) => {
-          console.error('Error fetching messages:', error);
-        });
+        .catch(() => {});
     };
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       setMessages((prevMessages) => [...prevMessages, msg]);
     };
-    ws.onclose = () => console.log('WS closed');
-    ws.onerror = (err) => console.error('WS error', err);
+    ws.onclose = () => {
+      wsRef.current = null;
+      setRoomId('');
+    };
+    ws.onerror = () => {};
 
     return () => ws.close();
   }, [roomId]); // important: re-connect when room changes

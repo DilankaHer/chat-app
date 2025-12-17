@@ -29,10 +29,14 @@ func NewRoomHandler(roomRepository repo.RoomRepository, messageRepository repo.M
 
 func (rr *RoomHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 	roomId := r.URL.Query().Get("roomId")
+	if roomId == "" {
+		util.JSONMarshaller(w, http.StatusBadRequest, "Room ID is required", http.StatusText(http.StatusBadRequest))
+		return
+	}
 
 	claims := r.Context().Value("user").(jwt.MapClaims)
 	if claims == nil {
-		util.JSONMarshaller(w, http.StatusInternalServerError, "Can't find userId ")
+		util.JSONMarshaller(w, http.StatusInternalServerError, "Can't find userId ", http.StatusText(http.StatusInternalServerError))
 		return
 	}
 	userId := claims["userId"].(string)
@@ -42,23 +46,24 @@ func (rr *RoomHandler) JoinRoom(w http.ResponseWriter, r *http.Request) {
 
 	err := validator.New().Struct(userRoom)
 	if err != nil {
-		util.JSONMarshaller(w, http.StatusBadRequest, "Join Room Failed at Struct Level: "+err.Error())
+		util.JSONMarshaller(w, http.StatusBadRequest, "Join Room Failed at Struct Level: "+err.Error(), http.StatusText(http.StatusBadRequest))
 		return
 	}
 
 	room, exists := rr.hub.Rooms[userRoom.RoomId]
 	if !exists {
-		util.JSONMarshaller(w, http.StatusNotFound, "Room not found")
+		util.JSONMarshaller(w, http.StatusNotFound, "Room not found", http.StatusText(http.StatusNotFound))
 		return
 	}
 	err = ws.ConnectToRoom(room, userRoom.UserId, userRoom.Username, rr.messageRepository, w, r)
 	if err != nil {
-		util.JSONMarshaller(w, http.StatusInternalServerError, "Failed at Connect To Room")
+		util.JSONMarshaller(w, http.StatusInternalServerError, "Failed at Connect To Room", http.StatusText(http.StatusInternalServerError))
 		return
 	}
 }
 
 func (rr *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
+	userId := r.Context().Value("user").(jwt.MapClaims)["userId"].(string)
 	defer r.Body.Close()
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -78,7 +83,7 @@ func (rr *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	room := &repo.Room{Name: createRoom.RoomName}
+	room := &repo.Room{Name: createRoom.RoomName, CreatedBy: userId}
 	err = rr.roomRepository.CreateRoom(room)
 	if err != nil {
 		http.Error(w, "Failed to Create Room", http.StatusInternalServerError)
@@ -90,8 +95,7 @@ func (rr *RoomHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to Create Room", http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(room)
+	util.JSONMarshaller(w, http.StatusOK, room, "Room created successfully")
 }
 
 func (rr *RoomHandler) GetRooms(w http.ResponseWriter, r *http.Request) {
@@ -100,6 +104,19 @@ func (rr *RoomHandler) GetRooms(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to Get Rooms", http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(rooms)
+	util.JSONMarshaller(w, http.StatusOK, rooms, http.StatusText(http.StatusOK))
+}
+
+func (rr *RoomHandler) DeleteRoom(w http.ResponseWriter, r *http.Request) {
+	roomId := r.URL.Query().Get("roomId")
+	if roomId == "" {
+		http.Error(w, "Room ID is required", http.StatusBadRequest)
+		return
+	}
+	err := rr.roomRepository.DeleteRoom(roomId)
+	if err != nil {
+		http.Error(w, "Failed to Delete Room", http.StatusInternalServerError)
+		return
+	}
+	util.JSONMarshaller(w, http.StatusOK, "Room deleted successfully", "Room deleted successfully")
 }

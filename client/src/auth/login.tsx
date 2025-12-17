@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import type { LoginState } from '../App';
 import { useApi, type ApiRequest } from '../utils/apiRequest';
 
@@ -19,10 +19,6 @@ function Login({
   const [username, setUsername] = useState('');
   const [isSignup, setIsSignup] = useState(false);
 
-  useEffect(() => {
-    console.log(isSignup);
-  }, [isSignup]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let url = '';
@@ -35,22 +31,18 @@ function Login({
       const emailUsername = email;
       const loginData: LoginData = { emailUsername, password };
       url = '/login';
-      console.log(url);
       req = { url, method: 'POST', body: loginData };
     }
     req.fn = handleErrorLogin;
     req.dialogType = 'toast';
     apiRequest<{ message: string; userId: string }>(req)
       .then((response) => {
-        console.log(response);
         setLoginState({
           isLoginSuccess: true,
           userId: response.userId,
         });
       })
-      .catch((error) => {
-        console.log('error', error);
-      });
+      .catch(() => {});
   };
 
   const handleErrorLogin = () => {

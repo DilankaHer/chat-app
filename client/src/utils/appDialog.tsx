@@ -1,9 +1,9 @@
-import { faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
+import { faCheckCircle, faExclamationCircle } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { createContext, useContext, useState } from 'react';
 
 type DialogContextType = {
-  showDialog: (dialogType: string, message: string, fn?: () => void) => void;
+  showDialog: (dialogType: string, message: string, isError: boolean, fn?: () => void) => void;
 };
 
 const DialogContext = createContext<DialogContextType>({
@@ -15,14 +15,16 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
     open: false,
     dialogType: 'dialog',
     message: '',
+    isError: true,
   });
   const [callback, setCallback] = useState<(() => void) | null>(null);
-  function showDialog(dialogType: string, message: string, fn?: () => void) {
+  function showDialog(dialogType: string, message: string, isError: boolean, fn?: () => void) {
     setCallback(() => fn || null);
     setDialog({
       open: true,
       dialogType,
       message,
+      isError,
     });
   }
 
@@ -39,6 +41,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
           open={dialog.open}
           onClose={handleClose}
           message={dialog.message}
+          isError={dialog.isError}
         />
       )}
       {dialog.dialogType === 'toast' && (
@@ -46,6 +49,7 @@ export function DialogProvider({ children }: { children: React.ReactNode }) {
           open={dialog.open}
           onClose={handleClose}
           message={dialog.message}
+          isError={dialog.isError}
         />
       )}
     </DialogContext.Provider>
@@ -56,19 +60,21 @@ function ApiDialog({
   open,
   onClose,
   message,
+  isError,
 }: {
   open: boolean;
   onClose: () => void;
   message: string;
+  isError?: boolean;
 }) {
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-[90%] max-w-sm">
-        <div className="text-red-500 mb-3 text-center text-2xl">
+        <div className= {`${isError ? 'text-red-500' : 'text-green-500'} mb-3 text-center text-2xl`}>
           <FontAwesomeIcon
-            icon={faExclamationCircle}
+            icon={isError ? faExclamationCircle : faCheckCircle}
             fill="currentColor"
             size="xl"
           />
@@ -95,10 +101,12 @@ function ApiToast({
   open,
   onClose,
   message,
+  isError,
 }: {
   open: boolean;
   onClose: () => void;
   message: string;
+  isError: boolean;
 }) {
   if (!open) return null;
 
@@ -111,29 +119,17 @@ function ApiToast({
       })()}
     >
       <div
-        id="toast-error"
-        className="flex items-center max-w-sm p-4 text-body bg-red-800 rounded-base shadow-xs border border-default animate-fade-in"
+        id="toast"
+        className={`${isError ? 'bg-red-800' : 'bg-green-800'} flex items-center max-w-sm p-4 text-body rounded-base shadow-xs border border-default animate-fade-in`}
         role="alert"
       >
         <div className="inline-flex items-center justify-center shrink-0 w-7 h-7 text-fg-error text-lg bg-error-soft rounded">
-          <svg
-            className="w-5 h-5"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M12 9v4m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.66-3L13.66 4c-.77-1.33-2.55-1.33-3.32 0L3.41 16c-.84 1.33.12 3 1.66 3z"
-            />
-          </svg>
-          <span className="sr-only">Error icon</span>
+          <FontAwesomeIcon
+            icon={isError ? faExclamationCircle : faCheckCircle}
+            fill="currentColor"
+            size="xl"
+          />
         </div>
-
         <div className="ml-3 text-lg font-normal">{message}</div>
 
         {/* <button

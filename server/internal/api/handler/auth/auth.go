@@ -74,41 +74,40 @@ func (ah *AuthHandler) Signup(w http.ResponseWriter, r *http.Request) {
 		UserId:  user.UserId,
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	util.JSONMarshaller(w, http.StatusOK, response, "SignUp Successful")
 }
 
 func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		util.JSONMarshaller(w, http.StatusInternalServerError, "Login Failed")
+		util.JSONMarshaller(w, http.StatusInternalServerError, "Login Failed", http.StatusText(http.StatusInternalServerError))
 		return
 	}
 
 	login := &Login{}
 	err = json.Unmarshal(body, login)
 	if err != nil {
-		util.JSONMarshaller(w, http.StatusBadRequest, "Login Failed")
+		util.JSONMarshaller(w, http.StatusBadRequest, "Login Failed", http.StatusText(http.StatusBadRequest))
 		return
 	}
 
 	err = validator.New().Struct(login)
 	if err != nil {
-		util.JSONMarshaller(w, http.StatusBadRequest, err.Error())
+		util.JSONMarshaller(w, http.StatusBadRequest, "Login failed at struct level: "+err.Error(), http.StatusText(http.StatusBadRequest))
 		return
 	}
 
 	user := repo.User{EmailUsername: login.EmailUsername, Password: login.Password}
 	err = ah.userRepository.Login(&user)
 	if err != nil {
-		util.JSONMarshaller(w, http.StatusUnauthorized, err.Error())
+		util.JSONMarshaller(w, http.StatusUnauthorized, err.Error(), http.StatusText(http.StatusUnauthorized))
 		return
 	}
 
 	err = SetJWTCookie(&w, &user, false)
 	if err != nil {
-		util.JSONMarshaller(w, http.StatusInternalServerError, err.Error())
+		util.JSONMarshaller(w, http.StatusInternalServerError, "Login Failed", http.StatusText(http.StatusInternalServerError))
 		return
 	}
 
@@ -117,7 +116,7 @@ func (ah *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		UserId:  user.UserId,
 	}
 
-	util.JSONMarshaller(w, http.StatusOK, response)
+	util.JSONMarshaller(w, http.StatusOK, response, "Login Successful")
 }
 
 func (ah *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
@@ -125,19 +124,20 @@ func (ah *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	user := repo.User{UserId: userId}
 	err := ah.userRepository.GetUser(&user)
 	if err != nil {
-		util.JSONMarshaller(w, http.StatusInternalServerError, err)
+		_ = SetJWTCookie(&w, nil, true)
+		util.JSONMarshaller(w, http.StatusNotFound, "please login again", http.StatusText(http.StatusNotFound))
 		return
 	}
-	util.JSONMarshaller(w, http.StatusOK, user)
+	util.JSONMarshaller(w, http.StatusOK, user, http.StatusText(http.StatusOK))
 }
 
 func (ah *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	err := SetJWTCookie(&w, nil, true)
 	if err != nil {
-		util.JSONMarshaller(w, http.StatusInternalServerError, err.Error())
+		util.JSONMarshaller(w, http.StatusInternalServerError, "Logout Failed", http.StatusText(http.StatusInternalServerError))
 		return
 	}
-	util.JSONMarshaller(w, http.StatusOK, "Logout Successful")
+	util.JSONMarshaller(w, http.StatusOK, nil, "Logout Successful")
 }
 
 func SetJWTCookie(w *http.ResponseWriter, user *repo.User, isLogout bool) error {

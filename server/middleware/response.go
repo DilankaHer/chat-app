@@ -40,10 +40,16 @@ func StandardResponse(next http.HandlerFunc) http.HandlerFunc {
 			Data:    nil,
 			Error:   "",
 		}
-		if rc.status != http.StatusOK {
-			resp.Error = json.RawMessage(rc.body.Bytes())
-		} else {
-			resp.Data = json.RawMessage(rc.body.Bytes())
+		parts := bytes.Split(rc.body.Bytes(), []byte("\n"))
+		if len(parts) > 1 {
+			resp.Message = string(parts[0])
+		}
+		if len(parts) == 2 {
+			if rc.status != http.StatusOK {
+				resp.Error = json.RawMessage(parts[1])
+			} else {
+				resp.Data = json.RawMessage(parts[1])
+			}
 		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(rc.status)

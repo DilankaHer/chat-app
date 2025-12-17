@@ -2,7 +2,7 @@ package message
 
 import (
 	"duhchat/internal/repo"
-	"encoding/json"
+	"duhchat/util"
 	"net/http"
 )
 
@@ -18,9 +18,8 @@ func (mh *MessageHandler) GetMessagesByRoomId(w http.ResponseWriter, r *http.Req
 	roomId := r.URL.Query().Get("roomId")
 	messages, err := mh.messageRepository.GetMessagesByRoomId(roomId)
 	if err != nil {
-		http.Error(w, "Failed to Get Messages By Room ID", http.StatusInternalServerError)
+		util.JSONMarshaller(w, http.StatusInternalServerError, "Failed to Get Messages", http.StatusText(http.StatusInternalServerError))
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(messages)
+	util.JSONMarshaller(w, http.StatusOK, messages, http.StatusText(http.StatusOK))
 }

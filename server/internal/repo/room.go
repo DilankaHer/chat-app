@@ -11,6 +11,7 @@ type RoomRepository interface {
 	GetRoomIds() ([]string, error)
 	DeleteRoomUsersByUserId(userId string) error
 	GetRooms() ([]Room, error)
+	DeleteRoom(roomId string) error
 }
 type RoomRepo struct {
 	db *sql.DB
@@ -19,6 +20,7 @@ type RoomRepo struct {
 type Room struct {
 	RoomId string `json:"roomId"`
 	Name   string `json:"name"`
+	CreatedBy string `json:"createdBy"`
 }
 
 func NewRoomRepo(db *sql.DB) RoomRepository {
@@ -51,9 +53,9 @@ func (rr *RoomRepo) CreateRoom(room *Room) error {
 	}
 	defer tx.Rollback()
 
-	query := `INSERT INTO rooms (name) VALUES ($1) RETURNING id`
+	query := `INSERT INTO rooms (name, created_by) VALUES ($1, $2) RETURNING id`
 
-	err = tx.QueryRow(query, room.Name).Scan(&room.RoomId)
+	err = tx.QueryRow(query, room.Name, room.CreatedBy).Scan(&room.RoomId)
 	if err != nil {
 		return err
 	}
@@ -96,7 +98,7 @@ func (rr *RoomRepo) DeleteRoomUsersByUserId(userId string) error {
 }
 
 func (rr *RoomRepo) GetRooms() ([]Room, error) {
-	query := `SELECT id, name FROM rooms`
+	query := `SELECT id, name, created_by FROM rooms`
 
 	var rooms []Room
 	rows, err := rr.db.Query(query)
@@ -106,7 +108,7 @@ func (rr *RoomRepo) GetRooms() ([]Room, error) {
 
 	for rows.Next() {
 		var room Room
-		err := rows.Scan(&room.RoomId, &room.Name)
+		err := rows.Scan(&room.RoomId, &room.Name, &room.CreatedBy)
 		if err != nil {
 			return nil, err
 		}
@@ -115,3 +117,15 @@ func (rr *RoomRepo) GetRooms() ([]Room, error) {
 
 	return rooms, nil
 }
+
+func (rr *RoomRepo) DeleteRoom(roomId string) error {
+	query := `DELETE FROM rooms WHERE id = $1`
+
+	_, err := rr.db.Exec(query, roomId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+

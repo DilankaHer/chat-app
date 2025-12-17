@@ -31,15 +31,18 @@ export function useApi() {
       const data: ApiResponse = await response.json();
       if (response.status !== 200) {
         if (data.error !== 'missing auth token' && req.dialogType) {
-          showDialog(req.dialogType, data.error, req.fn);
+          showDialog(req.dialogType, data.error, true, req.fn);
         }
         isUnexpectedError = false;
         throw new Error(data.error);
       }
+      if (req.dialogType) {
+        showDialog(req.dialogType, data.message, false);
+      }
       return data.data == null && ifNull !== undefined ? ifNull as T: data.data as T;
     } catch (error) {
       if (isUnexpectedError) {
-        showDialog('toast', 'Something went wrong', req.fn);
+        showDialog('toast', 'Something went wrong', true, req.fn);
       }
       throw error;
     }

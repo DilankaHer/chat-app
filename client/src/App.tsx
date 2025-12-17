@@ -1,3 +1,5 @@
+import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Fragment, useEffect, useState } from 'react';
 import Login from './auth/login';
 import Room from './Room';
@@ -9,6 +11,7 @@ export interface LoginState {
 }
 interface Room {
   roomId: string;
+  createdBy: string;
   name: string;
 }
 interface User {
@@ -34,22 +37,21 @@ function App() {
       url: '/createRoom',
       method: 'POST',
       body: { roomName: roomName },
+      dialogType: 'toast',
     };
     apiRequest<Room>(req)
       .then((response) => {
         setRooms([...rooms, response]);
       })
-      .catch(() => {
-        console.log('failed top create room');
-      });
+      .catch(() => {});
   };
 
   useEffect(() => {
+    console.log("Inner", loginState.isLoginSuccess)
     if (loginState.isLoginSuccess) return;
     const req: ApiRequest = {
       url: '/me',
       method: 'GET',
-      dialogType: 'toast',
     };
     apiRequest<User>(req)
       .then((response) => {
@@ -63,6 +65,7 @@ function App() {
   }, [loginState.isLoginSuccess]);
 
   useEffect(() => {
+    console.log("Inner", loginState.isLoginSuccess)
     if (loginState.isLoginSuccess) {
       const req: ApiRequest = {
         url: '/rooms',
@@ -95,6 +98,20 @@ function App() {
       });
   };
 
+  const handleDeleteRoom = (roomId: string) => {
+    const req: ApiRequest = {
+      url: `/deleteRoom?roomId=${roomId}`,
+      method: 'DELETE',
+      dialogType: 'toast',
+    };
+    apiRequest<void>(req)
+      .then(() => {
+        const newRooms = rooms.filter((room) => room.roomId !== roomId);
+        setRooms(newRooms);
+      })
+      .catch(() => {});
+  };
+
   return (
     <div className="flex flex-col gap-3 h-screen overflow-hidden lg:text-xl md:text-lg text-base">
       {isLoading ? (
@@ -112,11 +129,11 @@ function App() {
           <div className="flex justify-center text-center">
             {roomId !== '' ? (
               <span className="lg:text-4xl md:text-3xl text-xl font-bold">
-                Connected to {rooms.find((room) => room.roomId === roomId)?.name || ''}
+                {rooms.find((room) => room.roomId === roomId)?.name || ''}
               </span>
             ) : (
-              <span className="lg:text-4xl md:text-3xl text-xl font-mono">
-                Chat App - Room Based WebSocket Demo
+              <span className="lg:text-4xl md:text-3xl text-xl font-bold">
+                Kade-Demo
               </span>
             )}
           </div>
@@ -162,22 +179,31 @@ function App() {
             />
           )}
           {rooms.length > 0 && roomId === '' && (
-            <div className="flex flex-wrap justify-center items-center p-4 gap-4 mt-10">
-              {rooms.map((room) => (
-                <button
-                  key={room.roomId}
-                  className="
-                    w-fit
-                    px-6 py-4 sm:px-10 sm:py-5
-                    rounded-2xl
-                    font-medium
-                    shadow-sm
-                    bg-linear-to-b from-indigo-600 to-indigo-500
-                  "
-                  onClick={() => setRoomId(room.roomId)}
-                >
-                  {room.name}
-                </button>
+              <div className="flex flex-wrap justify-center items-center p-4 gap-4 mt-7">
+                {rooms.map((room) => (
+                  <div key={room.roomId} className="flex flex-col gap-1 items-stretch">
+                      <div className={`${room.createdBy !== loginState.userId && 'invisible disabled'}  flex items-center justify-center text-white xl:text-xl lg:text-lg md:text-base text-xs rounded-xl p-1 shadow-sm bg-linear-to-b from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+                        onClick={() => handleDeleteRoom(room.roomId)}>
+                        <FontAwesomeIcon
+                          icon={faTrashCan}
+                          fill="currentColor"
+                        />
+                      </div>
+                    <button
+                      key={room.roomId}
+                      className="
+                      w-fit
+                      px-6 py-4 sm:px-10 sm:py-5
+                      rounded-2xl
+                      font-medium
+                      shadow-sm
+                      bg-linear-to-b from-indigo-600 to-indigo-500
+                    "
+                    onClick={() => setRoomId(room.roomId)}
+                  >
+                    {room.name}
+                  </button>
+                </div>
               ))}
             </div>
           )}

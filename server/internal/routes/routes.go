@@ -35,6 +35,7 @@ func SetupRoutes(loginHandler *auth.AuthHandler, joinRoomHandler *room.RoomHandl
 		pr.Get("/joinRoom", joinRoomHandler.JoinRoom)
 		pr.Get("/me", middleware.StandardResponse(loginHandler.GetMe))
 		pr.Post("/createRoom", middleware.StandardResponse(joinRoomHandler.CreateRoom))
+		pr.Delete("/deleteRoom", middleware.StandardResponse(joinRoomHandler.DeleteRoom))
 		pr.Post("/logout", middleware.StandardResponse(loginHandler.Logout))
 		// add more protected routes here
 	})
