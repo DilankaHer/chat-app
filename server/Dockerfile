@@ -24,7 +24,7 @@ WORKDIR /app
 
 # Copy binary and required files
 COPY --from=go_builder /app/server_bin ./server
-COPY --from=go_builder /app/server/config ./config
+COPY --from=go_builder /app/config ./config
 
 EXPOSE 8080
 

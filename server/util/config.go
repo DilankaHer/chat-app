@@ -25,7 +25,7 @@ func GetAppConfig() (*AppConfig, error) {
 	case "development":
 		fileName = "config/.env.dev.json"
 	case "production":
-		fileName = "/app/config/.env.prod.json"
+		fileName = "config/.env.prod.json"
 	default:
 		return nil, errors.New("invalid app environment")
 	}

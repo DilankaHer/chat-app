@@ -41,6 +41,7 @@ WORKDIR /app
 
 # Copy binary and required files
 COPY --from=go_builder /app/server_bin ./server
+COPY --from=go_builder /app/server/config ./server/config
 COPY --from=vite_builder /app/client/dist ./static
 
 EXPOSE 8080
