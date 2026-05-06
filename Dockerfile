@@ -40,10 +40,10 @@ FROM alpine:3.20
 WORKDIR /app
 
 # Copy binary and required files
-COPY --from=go_builder /app/server_bin ./server
-COPY --from=go_builder /app/server/config ./server/config
+COPY --from=go_builder /app/server_bin ./server_bin
+COPY --from=go_builder /app/server/config ./config
 COPY --from=vite_builder /app/client/dist ./static
 
 EXPOSE 8080
 
-CMD ["./server"]
+CMD ["./server_bin"]
