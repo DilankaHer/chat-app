@@ -187,7 +187,7 @@ function App() {
               </div>
               <div className="text-center cursor-pointer">
                 <button
-                  className="w-fit rounded-2xl px-4 py-2 font-medium shadow-sm transition bg-linear-to-b from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-700 active:translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-green-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-fit rounded-2xl px-4 py-2 font-medium shadow-sm transition bg-linear-to-b from-yellow-600 to-yellow-500 hover:from-yellow-700 hover:to-yellow-700 active:translate-y-0.5 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={handleRefresh}
                 >
                   Refresh Rooms

@@ -48,6 +48,9 @@ func main() {
 
 	r := routes.SetupRoutes(loginHandler, roomUserHandler, messageHandler, config)
 
+	fs := http.FileServer(http.Dir("./static"))
+	r.Handle("/*", fs)
+
 	server := &http.Server{
 		Addr:         ":8080",
 		Handler:      r,
