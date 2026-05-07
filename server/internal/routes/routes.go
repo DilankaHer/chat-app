@@ -23,21 +23,23 @@ func SetupRoutes(loginHandler *auth.AuthHandler, joinRoomHandler *room.RoomHandl
 		MaxAge:           300,
 	}))
 
-	// public routes (NO middleware)
-	r.Get("/rooms", middleware.StandardResponse(joinRoomHandler.GetRooms))
-	r.Get("/messages", middleware.StandardResponse(messageHandler.GetMessagesByRoomId))
-	r.Post("/signup", middleware.StandardResponse(loginHandler.Signup))
-	r.Post("/login", middleware.StandardResponse(loginHandler.Login))
+	r.Route("/api", func(br chi.Router) {
+		// public routes (NO middleware)
+		br.Get("/rooms", middleware.StandardResponse(joinRoomHandler.GetRooms))
+		br.Get("/messages", middleware.StandardResponse(messageHandler.GetMessagesByRoomId))
+		br.Post("/signup", middleware.StandardResponse(loginHandler.Signup))
+		br.Post("/login", middleware.StandardResponse(loginHandler.Login))
 
-	// private routes (WITH JWT middleware)
-	r.Group(func(pr chi.Router) {
-		pr.Use(middleware.JWTAuth(config.JWTSecret))
-		pr.Get("/joinRoom", joinRoomHandler.JoinRoom)
-		pr.Get("/me", middleware.StandardResponse(loginHandler.GetMe))
-		pr.Post("/createRoom", middleware.StandardResponse(joinRoomHandler.CreateRoom))
-		pr.Delete("/deleteRoom", middleware.StandardResponse(joinRoomHandler.DeleteRoom))
-		pr.Post("/logout", middleware.StandardResponse(loginHandler.Logout))
-		// add more protected routes here
+		// private routes (WITH JWT middleware)
+		br.Group(func(pr chi.Router) {
+			pr.Use(middleware.JWTAuth(config.JWTSecret))
+			pr.Get("/joinRoom", joinRoomHandler.JoinRoom)
+			pr.Get("/me", middleware.StandardResponse(loginHandler.GetMe))
+			pr.Post("/createRoom", middleware.StandardResponse(joinRoomHandler.CreateRoom))
+			pr.Delete("/deleteRoom", middleware.StandardResponse(joinRoomHandler.DeleteRoom))
+			pr.Post("/logout", middleware.StandardResponse(loginHandler.Logout))
+			// add more protected routes here
+		})
 	})
 
 	// r.Handle("/assets/*", http.StripPrefix("/", http.FileServer(http.Dir("./static"))))
